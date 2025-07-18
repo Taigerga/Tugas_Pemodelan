@@ -483,6 +483,13 @@ with tab2:
     
     # Korelasi Antar Parameter
     st.subheader("Korelasi Antar Parameter Polutan")
+    st.markdown("""
+    **Interpretasi Korelasi:**
+    1. **PM2.5 vs PM10**: Korelasi kuat (>0.8) - Sumber emisi serupa (kendaraan, industri)
+    2. **SO2 vs NO2**: Korelasi sedang - Indikator emisi pembakaran bahan bakar fosil
+    3. **O3 vs NO2**: Korelasi negatif - Reaksi fotokimia di siang hari
+    4. Nilai mendekati nol menunjukkan hubungan yang lemah antar polutan
+    """)
     fig4 = plt.figure(figsize=(10, 8))
     sns.heatmap(df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].corr(), annot=True, cmap='coolwarm')
     plt.title('Korelasi Antar Parameter Polutan')
@@ -491,7 +498,14 @@ with tab2:
     
     # Kategori ISPU
     st.subheader("Distribusi Kategori ISPU")
-    
+    st.markdown("""
+    **Kategori ISPU dan Dampaknya:**
+    1. **Baik** (Hijau): Aktivitas luar ruangan aman
+    2. **Sedang** (Kuning): Kurangi aktivitas panjang di luar bagi penderita pernapasan
+    3. **Tidak Sehat** (Oranye): Hindari aktivitas luar ruangan berkepanjangan
+    4. **Sangat Tidak Sehat** (Merah): Hindari semua aktivitas luar ruangan
+    5. **Berbahaya** (Merah Tua): Tetap di dalam ruangan dengan pembersih udara
+    """)
     # Hitung jumlah hari per kategori
     kategori_urut = ['Baik', 'Sedang', 'Tidak Sehat', 'Sangat Tidak Sehat', 'Berbahaya']
     df['Kategori_ISPU'] = df['ISPU_max'].apply(lambda x: "Baik" if x <= 50 else 
