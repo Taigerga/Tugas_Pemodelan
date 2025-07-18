@@ -417,22 +417,6 @@ with tab1:
     st.caption("Histogram menunjukkan distribusi konsentrasi polutan. Garis merah/hijau menunjukkan kurva distribusi teoritis.")
     plt.close()
     
-    # Boxplot Ternormalisasi
-    st.subheader("Boxplot Ternormalisasi")
-    fig2 = plt.figure(figsize=(12, 6))
-    scaler = MinMaxScaler()
-    scaled = scaler.fit_transform(df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']])
-    sns.boxplot(data=pd.DataFrame(scaled, columns=['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']).melt(), 
-                x='variable', y='value')
-    plt.title('Distribusi Parameter Polutan (Normalized)')
-    plt.xlabel('Parameter')
-    plt.ylabel('Nilai Normalized')
-    st.pyplot(fig2)
-    st.caption("Boxplot ini menunjukkan distribusi nilai polutan yang telah dinormalisasi ke rentang [0,1].")
-
-with tab2:
-    st.header("Visualisasi Indeks ISPU")
-    
     # Tren Harian ISPU
     st.subheader("Tren Harian ISPU")
     fig3 = plt.figure(figsize=(14, 6))
