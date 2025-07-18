@@ -404,6 +404,16 @@ with tab1:
     fig1, axes1 = plt.subplots(2, 3, figsize=(15, 10))
     fig1.suptitle('Distribusi Parameter Kualitas Udara dan Kurva Teoritis', fontsize=14)
     axes1 = axes1.ravel()
+
+    st.markdown("""
+    **Penjelasan Tren ISPU:**
+    - Garis biru: Nilai ISPU harian dengan fluktuasi alami
+    - Garis merah: Rata-rata 7 hari untuk melihat tren
+    - Lonjakan ISPU bisa disebabkan oleh:
+      - Peningkatan aktivitas kendaraan
+      - Pembakaran biomassa
+      - Kondisi meteorologi yang tidak mendispersi polutan
+    """)
     
     for i, col in enumerate(['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']):
         if col in params:
