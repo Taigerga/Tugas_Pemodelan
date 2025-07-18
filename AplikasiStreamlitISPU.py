@@ -593,7 +593,7 @@ with tab3:
     
     # Plot
     fig7, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-    ax1.pie(kategori_counts_filtered, labels=kategori_counts_filtered.index, autopct='%1.1f%%',
+    ax1.pie(kategori_counts, labels=kategori_counts_filtered.index, autopct='%1.1f%%',
             startangle=90, colors=[colors[c] for c in kategori_counts_filtered.index],
             shadow=True, textprops={'color': 'black'})
     ax1.set_title('Distribusi Persentase Kategori Risiko')
