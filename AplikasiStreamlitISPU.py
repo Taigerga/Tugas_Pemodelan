@@ -105,19 +105,6 @@ def create_word_document(df, params, n_samples):
                 content="Plot menunjukkan tren ISPU harian selama simulasi dengan rata-rata 7 hari terakhir.",
                 image=True)
     
-    # Boxplot Ternormalisasi
-    plt.figure(figsize=(12, 6))
-    scaler = MinMaxScaler()
-    scaled = scaler.fit_transform(df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']])
-    sns.boxplot(data=pd.DataFrame(scaled, columns=['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']).melt(), 
-                x='variable', y='value')
-    plt.title('Distribusi Parameter Polutan (Normalized)')
-    plt.xlabel('Parameter')
-    plt.ylabel('Nilai Normalized')
-    save_to_word(doc, "Boxplot Ternormalisasi", 
-                content="Boxplot menunjukkan distribusi nilai polutan yang telah dinormalisasi ke rentang [0,1].",
-                image=True)
-    
     # Korelasi Antar Parameter
     plt.figure(figsize=(10, 8))
     sns.heatmap(df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].corr(), annot=True, cmap='coolwarm')
