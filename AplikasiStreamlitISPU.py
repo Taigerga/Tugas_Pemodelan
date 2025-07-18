@@ -91,9 +91,7 @@ def create_word_document(df, params, n_samples):
     save_to_word(doc, "Distribusi Parameter dengan Kurva Distribusi Teoritis", 
                 content="Histogram menunjukkan distribusi konsentrasi polutan. Garis merah/hijau menunjukkan kurva distribusi teoritis.",
                 image=True)
-
-with tab2:
-    st.header("Visualisasi Indeks ISPU")
+    
     # Tren Harian ISPU
     plt.figure(figsize=(14, 6))
     plt.plot(df.index, df['ISPU_max'], label='ISPU Harian', alpha=0.5)
@@ -105,6 +103,19 @@ with tab2:
     plt.legend()
     save_to_word(doc, "Tren Harian ISPU", 
                 content="Plot menunjukkan tren ISPU harian selama simulasi dengan rata-rata 7 hari terakhir.",
+                image=True)
+    
+    # Boxplot Ternormalisasi
+    plt.figure(figsize=(12, 6))
+    scaler = MinMaxScaler()
+    scaled = scaler.fit_transform(df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']])
+    sns.boxplot(data=pd.DataFrame(scaled, columns=['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']).melt(), 
+                x='variable', y='value')
+    plt.title('Distribusi Parameter Polutan (Normalized)')
+    plt.xlabel('Parameter')
+    plt.ylabel('Nilai Normalized')
+    save_to_word(doc, "Boxplot Ternormalisasi", 
+                content="Boxplot menunjukkan distribusi nilai polutan yang telah dinormalisasi ke rentang [0,1].",
                 image=True)
     
     # Korelasi Antar Parameter
@@ -418,6 +429,22 @@ with tab1:
     st.pyplot(fig1)
     st.caption("Histogram menunjukkan distribusi konsentrasi polutan. Garis merah/hijau menunjukkan kurva distribusi teoritis.")
     plt.close()
+    
+    # Boxplot Ternormalisasi
+    st.subheader("Boxplot Ternormalisasi")
+    fig2 = plt.figure(figsize=(12, 6))
+    scaler = MinMaxScaler()
+    scaled = scaler.fit_transform(df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']])
+    sns.boxplot(data=pd.DataFrame(scaled, columns=['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']).melt(), 
+                x='variable', y='value')
+    plt.title('Distribusi Parameter Polutan (Normalized)')
+    plt.xlabel('Parameter')
+    plt.ylabel('Nilai Normalized')
+    st.pyplot(fig2)
+    st.caption("Boxplot ini menunjukkan distribusi nilai polutan yang telah dinormalisasi ke rentang [0,1].")
+
+with tab2:
+    st.header("Visualisasi Indeks ISPU")
     
     # Tren Harian ISPU
     st.subheader("Tren Harian ISPU")
