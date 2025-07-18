@@ -405,14 +405,14 @@ with tab1:
     fig1.suptitle('Distribusi Parameter Kualitas Udara dan Kurva Teoritis', fontsize=14)
     axes1 = axes1.ravel()
 
+    st.pyplot(fig1)
     st.markdown("""
-    **Penjelasan Tren ISPU:**
-    - Garis biru: Nilai ISPU harian dengan fluktuasi alami
-    - Garis merah: Rata-rata 7 hari untuk melihat tren
-    - Lonjakan ISPU bisa disebabkan oleh:
-      - Peningkatan aktivitas kendaraan
-      - Pembakaran biomassa
-      - Kondisi meteorologi yang tidak mendispersi polutan
+    **Penjelasan:**
+    - Grafik membandingkan distribusi aktual (histogram) dengan kurva teoritis
+    - Garis merah: Distribusi Weibull (cocok untuk data skew positif)
+    - Garis hijau: Distribusi Normal (cocok untuk data simetris)
+    - PM2.5 dan PM10 cenderung mengikuti distribusi Weibull
+    - SO2 dan CO cenderung mengikuti distribusi Normal
     """)
     
     for i, col in enumerate(['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']):
@@ -446,6 +446,17 @@ with tab2:
     # Tren Harian ISPU
     st.subheader("Tren Harian ISPU")
     fig3 = plt.figure(figsize=(14, 6))
+
+    st.markdown("""
+    **Penjelasan Tren ISPU:**
+    - Garis biru: Nilai ISPU harian dengan fluktuasi alami
+    - Garis merah: Rata-rata 7 hari untuk melihat tren
+    - Lonjakan ISPU bisa disebabkan oleh:
+      - Peningkatan aktivitas kendaraan
+      - Pembakaran biomassa
+      - Kondisi meteorologi yang tidak mendispersi polutan
+    """)
+    
     plt.plot(df.index, df['ISPU_max'], label='ISPU Harian', alpha=0.5)
     plt.plot(df['ISPU_max'].rolling(7).mean(), label='Rata-rata 7 Hari', color='red')
     plt.title('Tren Harian ISPU dengan Smoothing')
@@ -516,6 +527,14 @@ with tab3:
     # Skor Risiko
     st.subheader("Distribusi Skor Risiko Harian")
     fig6 = plt.figure(figsize=(10, 6))
+    st.markdown("""
+    **Penjelasan Risiko Kesehatan:**
+    - Skor risiko mengintegrasikan dampak semua polutan
+    - Kategori risiko berdasarkan pedoman kesehatan lingkungan:
+      - Rendah (6-9): Dampak minimal
+      - Sedang (10-14): Kelompok rentan perlu waspada
+      - Tinggi (15-18): Berpotensi mempengaruhi populasi umum
+    """)
     sns.histplot(df['Skor_Risiko'], bins=range(6, 19), kde=True, color='skyblue')
     plt.title('Distribusi Skor Risiko Harian')
     plt.xlabel('Skor Risiko (Total)')
