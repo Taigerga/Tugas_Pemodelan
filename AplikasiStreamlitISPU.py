@@ -574,12 +574,13 @@ with tab3:
                                                    "SEDANG" if x <= 14 else 
                                                    "TINGGI")
     kategori_counts = df['Kategori_Risiko'].value_counts().reindex(["RENDAH", "SEDANG", "TINGGI"], fill_value=0)
+    kategori_counts_filtered = kategori_counts[kategori_counts > 0]
     colors = {'RENDAH': 'green', 'SEDANG': 'gold', 'TINGGI': 'red'}
     
     # Plot
     fig7, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-    ax1.pie(kategori_counts, labels=kategori_counts.index, autopct='%1.1f%%',
-            startangle=90, colors=[colors[c] for c in kategori_counts.index],
+    ax1.pie(kategori_counts, labels=kategori_counts_filtered.index, autopct='%1.1f%%',
+            startangle=90, colors=[colors[c] for c in kategori_counts_filtered.index],
             shadow=True, textprops={'color': 'black'})
     ax1.set_title('Distribusi Persentase Kategori Risiko')
     
