@@ -405,7 +405,6 @@ with tab1:
     fig1.suptitle('Distribusi Parameter Kualitas Udara dan Kurva Teoritis', fontsize=14)
     axes1 = axes1.ravel()
 
-    st.pyplot(fig1)
     st.markdown("""
     **Penjelasan:**
     - Grafik membandingkan distribusi aktual (histogram) dengan kurva teoritis
