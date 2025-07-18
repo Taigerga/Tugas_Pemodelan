@@ -514,7 +514,7 @@ with tab2:
                                               "Sangat Tidak Sehat" if x <= 300 else 
                                               "Berbahaya")
     kategori_counts = df['Kategori_ISPU'].value_counts().reindex(kategori_urut, fill_value=0)
-    kategori_counts_filtered = kategori_counts[kategori_counts > 0]
+    
     # Warna dan style
     warna_kategori = {
         'Baik': 'green',
@@ -523,18 +523,18 @@ with tab2:
         'Sangat Tidak Sehat': 'red',
         'Berbahaya': 'darkred'
     }
-    colors = [warna_kategori[k] for k in kategori_counts_filtered.index]
+    colors = [warna_kategori[k] for k in kategori_counts.index]
     
     # Pie Chart
     fig5, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-    ax1.pie(kategori_counts_filtered, labels=kategori_counts_filtered.index,
+    ax1.pie(kategori_counts, labels=kategori_counts.index,
             autopct='%1.1f%%', startangle=90, colors=colors,
             shadow=True, textprops={'color': 'black', 'fontsize': 10})
     ax1.set_title('Distribusi Persentase Kategori ISPU')
     ax1.axis('equal')
     
     # Bar Chart
-    bars = ax2.bar(kategori_counts_filtered.index, kategori_counts_filtered.values, color=colors, edgecolor='black')
+    bars = ax2.bar(kategori_counts.index, kategori_counts.values, color=colors, edgecolor='black')
     ax2.set_title('Jumlah Hari per Kategori ISPU')
     ax2.set_xlabel('Kategori ISPU')
     ax2.set_ylabel('Jumlah Hari')
