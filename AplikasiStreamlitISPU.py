@@ -534,7 +534,7 @@ with tab2:
     ax1.axis('equal')
     
     # Bar Chart
-    bars = ax2.bar(kategori_counts.index, kategori_counts.values, color=colors, edgecolor='black')
+    bars = ax2.bar(kategori_counts_filtered.index, kategori_counts_filtered.values, color=colors, edgecolor='black')
     ax2.set_title('Jumlah Hari per Kategori ISPU')
     ax2.set_xlabel('Kategori ISPU')
     ax2.set_ylabel('Jumlah Hari')
