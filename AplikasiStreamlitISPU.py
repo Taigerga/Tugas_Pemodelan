@@ -91,7 +91,9 @@ def create_word_document(df, params, n_samples):
     save_to_word(doc, "Distribusi Parameter dengan Kurva Distribusi Teoritis", 
                 content="Histogram menunjukkan distribusi konsentrasi polutan. Garis merah/hijau menunjukkan kurva distribusi teoritis.",
                 image=True)
-    
+
+with tab2:
+    st.header("Visualisasi Indeks ISPU")
     # Tren Harian ISPU
     plt.figure(figsize=(14, 6))
     plt.plot(df.index, df['ISPU_max'], label='ISPU Harian', alpha=0.5)
