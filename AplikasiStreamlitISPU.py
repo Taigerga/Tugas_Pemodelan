@@ -140,8 +140,9 @@ def create_word_document(df, params, n_samples):
                                               "Tidak Sehat" if x <= 200 else 
                                               "Sangat Tidak Sehat" if x <= 300 else 
                                               "Berbahaya")
+    
     kategori_counts = df['Kategori_ISPU'].value_counts()
-    kategori_counts = kategori_counts[kategori_counts > 0]
+    kategori_counts_filtered = kategori_counts[kategori_counts > 0]
     warna_kategori = {
         'Baik': 'green',
         'Sedang': 'gold',
@@ -149,10 +150,10 @@ def create_word_document(df, params, n_samples):
         'Sangat Tidak Sehat': 'red',
         'Berbahaya': 'darkred'
     }
-    colors = [warna_kategori[k] for k in kategori_counts.index]
+    colors = [warna_kategori[k] for k in kategori_counts_filtered.index]
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-    ax1.pie(kategori_counts, labels=kategori_counts.index,
+    ax1.pie(kategori_counts_filtered, labels=kategori_counts_filtered.index,
             autopct='%1.1f%%', startangle=90, colors=colors,
             shadow=True, textprops={'color': 'black', 'fontsize': 10})
     ax1.set_title('Distribusi Persentase Kategori ISPU')
