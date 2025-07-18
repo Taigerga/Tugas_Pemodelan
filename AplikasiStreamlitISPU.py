@@ -125,6 +125,14 @@ def create_word_document(df, params, n_samples):
     save_to_word(doc, "Korelasi Antar Parameter Polutan", 
                 content="Heatmap menunjukkan tingkat korelasi antar parameter polutan.",
                 image=True)
+    st.markdown("""
+    **Interpretasi Korelasi:**
+    1. **PM2.5 vs PM10**: Korelasi kuat (>0.8) - Sumber emisi serupa (kendaraan, industri)
+    2. **SO2 vs NO2**: Korelasi sedang - Indikator emisi pembakaran bahan bakar fosil
+    3. **O3 vs NO2**: Korelasi negatif - Reaksi fotokimia di siang hari
+    4. Nilai mendekati nol menunjukkan hubungan yang lemah antar polutan
+    """)
+
     
     # Kategori ISPU
     df['Kategori_ISPU'] = df['ISPU_max'].apply(lambda x: "Baik" if x <= 50 else 
@@ -133,7 +141,7 @@ def create_word_document(df, params, n_samples):
                                               "Sangat Tidak Sehat" if x <= 300 else 
                                               "Berbahaya")
     kategori_counts = df['Kategori_ISPU'].value_counts()
-    
+    kategori_counts = kategori_counts[kategori_counts > 0]
     warna_kategori = {
         'Baik': 'green',
         'Sedang': 'gold',
@@ -163,7 +171,13 @@ def create_word_document(df, params, n_samples):
     
     plt.tight_layout()
     save_to_word(doc, "Distribusi Kategori ISPU", 
-                content="Diagram lingkaran dan batang menunjukkan distribusi kategori ISPU selama periode simulasi.",
+                content="""**Diagram lingkaran dan batang menunjukkan distribusi kategori ISPU selama periode simulasi.**
+                        **Distribusi Kategori Kualitas Udara:**
+                            - **Baik (0-50)**: Tidak ada risiko kesehatan
+                            - **Sedang (51-100)**: Kelompok sensitif mungkin terpengaruh
+                            - **Tidak Sehat (101-200)**: Seluruh populasi mulai terpengaruh
+                            - **Sangat Tidak Sehat (201-300)**: Peringatan kesehatan serius
+                            - **Berbahaya (>300)**: Darurat kesehatan publik""",
                 image=True)
     
     # Skor Risiko
@@ -544,7 +558,16 @@ with tab3:
     
     # Kategori Risiko
     st.subheader("Distribusi Kategori Risiko")
-    
+    st.markdown("""
+    **Panduan Respon Kesehatan:**
+    1. **Risiko Rendah** (Hijau): Tidak perlu tindakan khusus
+    2. **Risiko Sedang** (Kuning): Pantau gejala pada kelompok rentan
+    3. **Risiko Tinggi** (Merah): 
+       - Hindari aktivitas luar ruangan
+       - Gunakan masker N95 jika harus keluar
+       - Pantau gejala gangguan pernapasan
+       - Sediakan obat-obatan darurat
+    """)
     # Hitung jumlah dan persentase
     df['Kategori_Risiko'] = df['Skor_Risiko'].apply(lambda x: "RENDAH" if x <= 9 else 
                                                    "SEDANG" if x <= 14 else 
