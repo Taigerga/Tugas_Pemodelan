@@ -584,34 +584,41 @@ with tab3:
        - Sediakan obat-obatan darurat
     """)
     # Hitung jumlah dan persentase
-    df['Kategori_Risiko'] = df['Skor_Risiko'].apply(lambda x: "RENDAH" if x <= 9 else 
-                                                   "SEDANG" if x <= 14 else 
-                                                   "TINGGI")
-    kategori_counts = df['Kategori_Risiko'].value_counts().reindex(["RENDAH", "SEDANG", "TINGGI"], fill_value=0)
-    kategori_counts_filtered = kategori_counts[kategori_counts > 0]
-    colors = {'RENDAH': 'green', 'SEDANG': 'gold', 'TINGGI': 'red'}
-    
-    # Plot
-    fig7, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-    ax1.pie(kategori_counts, labels=kategori_counts_filtered.index, autopct='%1.1f%%',
-            startangle=90, colors=[colors[c] for c in kategori_counts_filtered.index],
-            shadow=True, textprops={'color': 'black'})
-    ax1.set_title('Distribusi Persentase Kategori Risiko')
-    
-    bars = ax2.bar(kategori_counts.index, kategori_counts.values,
-                color=[colors[c] for c in kategori_counts.index])
-    ax2.set_title('Jumlah Hari per Kategori Risiko')
-    ax2.set_xlabel('Kategori Risiko')
-    ax2.set_ylabel('Jumlah Hari')
-    ax2.grid(axis='y', linestyle='--', alpha=0.7)
-    for bar in bars:
-        height = bar.get_height()
-        ax2.text(bar.get_x() + bar.get_width()/2., height + 0.5,
-                f'{int(height)}\n({height/len(df):.1%})', ha='center', va='bottom')
-    
-    plt.tight_layout()
-    st.pyplot(fig7)
-    st.caption("Diagram lingkaran dan batang menunjukkan distribusi kategori risiko kesehatan.")
+valid_index = [c for c in kategori_counts_filtered.index if c in colors]
+kategori_counts_filtered = kategori_counts_filtered.loc[valid_index]
+
+fig7, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+
+# PIE CHART
+if len(kategori_counts_filtered) > 0:
+    ax1.pie(
+        kategori_counts_filtered,
+        labels=kategori_counts_filtered.index,
+        autopct='%1.1f%%',
+        startangle=90,
+        colors=[colors[c] for c in kategori_counts_filtered.index],
+        shadow=True,
+        textprops={'color': 'black'}
+    )
+else:
+    ax1.text(0.5, 0.5, 'Tidak ada data kategori risiko', ha='center', va='center')
+ax1.set_title('Distribusi Persentase Kategori Risiko')
+
+# BAR CHART
+bars = ax2.bar(kategori_counts.index, kategori_counts.values,
+               color=[colors.get(c, 'gray') for c in kategori_counts.index])
+ax2.set_title('Jumlah Hari per Kategori Risiko')
+ax2.set_xlabel('Kategori Risiko')
+ax2.set_ylabel('Jumlah Hari')
+ax2.grid(axis='y', linestyle='--', alpha=0.7)
+for bar in bars:
+    height = bar.get_height()
+    ax2.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+             f'{int(height)}\n({height/len(df):.1%})', ha='center', va='bottom')
+
+plt.tight_layout()
+st.pyplot(fig7)
+st.caption("Diagram lingkaran dan batang menunjukkan distribusi kategori risiko kesehatan.")
 
 with tab4:
     st.header("Kesimpulan Simulasi")
