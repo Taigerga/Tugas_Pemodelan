@@ -448,7 +448,8 @@ def generate_simulation(n_samples=365):
     df = pd.DataFrame()
     for col in st.session_state.df_excel.columns:
         dist_type, mu, std = st.session_state.params[col]
-        df[col] = np.round(rng.normal(mu, std, n_samples), 2).clip(lower=0)
+        data = np.round(rng.normal(mu, std, n_samples), 2)
+        df[col] = pd.Series(data).clip(lower=0)
     return df
 
 # User input for number of samples
