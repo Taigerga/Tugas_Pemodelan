@@ -195,32 +195,6 @@ def create_word_document(df, params, n_samples):
                 """,
                 image=True)
 
-    # 4. Line Chart PM2.5 dan PM10
-    plt.figure(figsize=(14, 6))
-    plt.plot(df.index, df['PM2.5'], label='PM2.5', color='blue', alpha=0.7)
-    plt.plot(df.index, df['PM10'], label='PM10', color='red', alpha=0.7)
-    plt.axhline(y=25, color='blue', linestyle='--', alpha=0.3, label='Batas PM2.5 (WHO)')
-    plt.axhline(y=50, color='red', linestyle='--', alpha=0.3, label='Batas PM10 (WHO)')
-    plt.title('Perbandingan Tren Harian PM2.5 dan PM10')
-    plt.xlabel('Hari Simulasi')
-    plt.ylabel('Konsentrasi (µg/m³)')
-    plt.legend()
-    plt.grid(True)
-    save_to_word(doc, "Tren Harian PM2.5 dan PM10", 
-                content="""**Perbandingan konsentrasi harian partikel PM2.5 dan PM10.**
-                           **Penjelasan Diagram:**
-                           - Garis biru: Konsentrasi harian PM2.5 (partikel halus)
-                           - Garis merah: Konsentrasi harian PM10 (partikel kasar)
-                           - Garis putus-putus: Batas aman harian WHO
-                           - Biru: 25 µg/m³ untuk PM2.5
-                           - Merah: 50 µg/m³ untuk PM10
-                           - Sumbu X: Hari simulasi (time series)
-                           - Sumbu Y: Konsentrasi dalam µg/m³
-                           - Korelasi antara kedua polutan menunjukkan sumber emisi serupa
-                           - PM2.5 lebih berbahaya karena ukurannya yang lebih kecil
-                """,
-                image=True)
-
     # Polutan Dominan
     polutan_dominan = df['Parameter_Dominan'].value_counts()
     plt.figure(figsize=(10, 6))
@@ -236,13 +210,12 @@ def create_word_document(df, params, n_samples):
                            - **Sumbu Y**: Jumlah hari polutan tersebut menjadi penyebab ISPU tertinggi
                            - Warna biru muda: Frekuensi dominansi masing-masing polutan
                            - Garis grid: Membantu membaca nilai secara akurat
-                           - PM2.5 biasanya paling dominan karena dampak kesehatan yang lebih besar
                 """,
                 image=True)
     
     # Line Chart Polutan Utama
     plt.figure(figsize=(14, 6))
-    for polutan in ['PM2.5', 'PM10', 'SO2', 'NO2']:
+    for polutan in ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']:
         plt.plot(df.index, df[polutan], label=polutan, alpha=0.7)
     plt.title('Tren Polutan Utama')
     plt.xlabel('Hari')
@@ -252,35 +225,131 @@ def create_word_document(df, params, n_samples):
     save_to_word(doc, "Tren Polutan Utama",
                 content="""**Line chart menunjukkan tren beberapa polutan utama selama periode simulasi.**
                            **Penjelasan Diagram:**
-                           - **Sumbu X**: Minggu ke- (dikonversi dari hari simulasi)
-                           - **Sumbu Y**: Konsentrasi rata-rata mingguan (µg/m³)
+                           - **Sumbu X**: Hari ke- (dikonversi dari hari simulasi)
+                           - **Sumbu Y**: Konsentrasi harian (µg/m³)
                            - Garis berwarna: Mewakili polutan berbeda
-                           - Area terarsir: Variasi harian dalam minggu tersebut
+                           - Area terarsir: Variasi harian dalam Hari tersebut
                            - Pola mingguan membantu identifikasi pengaruh aktivitas manusia
                 """,
                 image=True)
 
-    # 7. Histogram PM2.5
+    #Histogram PM2.5
     plt.figure(figsize=(10, 6))
     sns.histplot(df['PM2.5'], bins=30, kde=True, color='teal')
-    plt.axvline(x=25, color='red', linestyle='--', label='Batas Aman WHO')
+    plt.axvline(x=15.5, color='red', linestyle='--', label='Batas Aman ISPU')
     plt.title('Distribusi Konsentrasi PM2.5')
     plt.xlabel('PM2.5 (µg/m³)')
     plt.ylabel('Frekuensi (Jumlah Hari)')
     plt.legend()
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     save_to_word(doc, "Distribusi Konsentrasi PM2.5",
-                content="""**Line chart menunjukkan tren beberapa polutan utama selama periode simulasi.**
+                content="""**Histogram menunjukkan Distribusi PM2.5.**
                            **Penjelasan Diagram:**
-                           - Histogram dengan 30 bins (kelompok interval konsentrasi)
-                           - Kurva KDE: Estimasi density probability (biru tua)
-                           - Garis merah putus: Batas aman WHO (25 µg/m³)
-                           - Sumbu X: Rentang konsentrasi PM2.5 (µg/m³)
-                           - Sumbu Y: Jumlah hari dalam setiap interval konsentrasi
-                           - Distribusi right-skewed menunjukkan:
-                           - Sebagian besar hari di bawah batas WHO
-                           - Beberapa hari dengan konsentrasi sangat tinggi
-                           - Ekor panjang menunjukkan potensi hari dengan polusi ekstrem
+                           - **Sumbu X**: Rentang konsentrasi PM2.5 (µg/m³)
+                           - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+                           - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+                           - Garis KDE (Kernel Density Estimate): Estimasi kurva distribusi
+                           - Garis Merah batas aman ISPU
+                """,
+                image=True)
+
+    #Histogram PM10 
+    plt.figure(figsize=(10, 6))
+    sns.histplot(st.session_state.df['PM10'], bins=30, kde=True, color='teal')
+    plt.axvline(x=50, color='red', linestyle='--', label='Batas Aman ISPU')
+    plt.title('Distribusi Konsentrasi PM10')
+    plt.xlabel('PM10 (µg/m³)')
+    plt.ylabel('Frekuensi (Jumlah Hari)')
+    plt.legend()
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_to_word(doc, "Distribusi Konsentrasi PM10",
+                content="""**Histogram menunjukkan Distribusi PM10.**
+                        **Penjelasan Diagram:**
+                        - **Sumbu X**: Rentang konsentrasi PM10 (µg/m³)
+                        - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+                        - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+                        - Garis KDE (Kernel Density Estimate): Estimasi kurva distribusi
+                        - Garis Merah batas aman ISPU
+                """,
+                image=True)
+
+    #Histogram SO2
+    plt.figure(figsize=(10, 6))
+    sns.histplot(st.session_state.df['SO2'], bins=30, kde=True, color='teal')
+    plt.axvline(x=52, color='red', linestyle='--', label='Batas Aman ISPU')
+    plt.title('Distribusi Konsentrasi SO2')
+    plt.xlabel('SO2 (µg/m³)')
+    plt.ylabel('Frekuensi (Jumlah Hari)')
+    plt.legend()
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_to_word(doc, "Distribusi Konsentrasi SO2",
+                content="""**Histogram menunjukkan Distribusi SO2.**
+                        **Penjelasan Diagram:**
+                        - **Sumbu X**: Rentang konsentrasi SO2 (µg/m³)
+                        - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+                        - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+                        - Garis KDE: Estimasi kurva distribusi
+                        - Garis Merah batas aman ISPU
+                """,
+                image=True)
+
+    #Histogram NO2
+    plt.figure(figsize=(10, 6))
+    sns.histplot(st.session_state.df['NO2'], bins=30, kde=True, color='teal')
+    plt.axvline(x=80, color='red', linestyle='--', label='Batas Aman ISPU')
+    plt.title('Distribusi Konsentrasi NO2')
+    plt.xlabel('NO2 (µg/m³)')
+    plt.ylabel('Frekuensi (Jumlah Hari)')
+    plt.legend()
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_to_word(doc, "Distribusi Konsentrasi NO2",
+                content="""**Histogram menunjukkan Distribusi NO2.**
+                        **Penjelasan Diagram:**
+                        - **Sumbu X**: Rentang konsentrasi NO2 (µg/m³)
+                        - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+                        - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+                        - Garis KDE: Estimasi kurva distribusi
+                        - Garis Merah batas aman ISPU
+                """,
+                image=True)
+
+    #Histogram CO
+    plt.figure(figsize=(10, 6))
+    sns.histplot(st.session_state.df['CO'], bins=30, kde=True, color='teal')
+    plt.axvline(x=4, color='red', linestyle='--', label='Batas Aman ISPU')
+    plt.title('Distribusi Konsentrasi CO')
+    plt.xlabel('CO (µg/m³)')
+    plt.ylabel('Frekuensi (Jumlah Hari)')
+    plt.legend()
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_to_word(doc, "Distribusi Konsentrasi CO",
+                content="""**Histogram menunjukkan Distribusi CO.**
+                        **Penjelasan Diagram:**
+                        - **Sumbu X**: Rentang konsentrasi CO (mg/m³)
+                        - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+                        - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+                        - Garis KDE: Estimasi kurva distribusi
+                        - Garis Merah batas aman ISPU
+                """,
+                image=True)
+
+    #Histogram O3
+    plt.figure(figsize=(10, 6))
+    sns.histplot(st.session_state.df['O3'], bins=30, kde=True, color='teal')
+    plt.axvline(x=120, color='red', linestyle='--', label='Batas Aman ISPU')
+    plt.title('Distribusi Konsentrasi O3')
+    plt.xlabel('O3 (µg/m³)')
+    plt.ylabel('Frekuensi (Jumlah Hari)')
+    plt.legend()
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    save_to_word(doc, "Distribusi Konsentrasi O3",
+                content="""**Histogram menunjukkan Distribusi O3.**
+                        **Penjelasan Diagram:**
+                        - **Sumbu X**: Rentang konsentrasi O3 (µg/m³)
+                        - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+                        - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+                        - Garis KDE: Estimasi kurva distribusi
+                        - Garis Merah batas aman ISPU
                 """,
                 image=True)
 
@@ -290,13 +359,33 @@ def create_word_document(df, params, n_samples):
     hari_tidak_sehat = len(df[df['Kategori_ISPU'].isin(['Tidak Sehat', 'Sangat Tidak Sehat', 'Berbahaya'])])
     polusi_tertinggi = df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].max().idxmax()
     hari_dengan_polusi_tinggi = len(df[df['Polusi_Total'] > df['Polusi_Total'].quantile(0.75)])
-    
+
+
+    pm25_over_limit = len(st.session_state.df[st.session_state.df['PM2.5'] > 15.5])
+    pm10_over_limit = len(st.session_state.df[st.session_state.df['PM10'] > 50])
+    o3_over_limit = len(st.session_state.df[st.session_state.df['O3'] > 120])
+    co_over_limit = len(st.session_state.df[st.session_state.df['CO'] > 5])
+    so2_over_limit = len(st.session_state.df[st.session_state.df['SO2'] > 20])
+    no2_over_limit = len(st.session_state.df[st.session_state.df['NO2'] > 30])
+    max_pollutant = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].max().idxmax()
+    min_pollutant = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].min().idxmax()
+    kategori_urut = ['Baik', 'Sedang', 'Tidak Sehat', 'Sangat Tidak Sehat', 'Berbahaya']
+    kategori_counts = st.session_state.df['Kategori_ISPU'].value_counts().reindex(kategori_urut, fill_value=0)
+
     kesimpulan = f"""
-    1. Rata-rata nilai ISPU selama {n_samples} hari adalah {rata2_ispu:.2f}, menunjukkan bahwa kualitas udara cenderung berada pada kategori {'Baik/Sedang' if rata2_ispu < 100 else 'Tidak Sehat'}.
-    2. Nilai ISPU tertinggi adalah {max_ispu:.2f}, masuk dalam kategori '{df.loc[df['ISPU_max'].idxmax(), 'Kategori_ISPU']}'. Ini merupakan kondisi kritis yang memerlukan antisipasi lebih lanjut.
+    1. Rata-rata nilai ISPU selama {st.session_state.n_samples} hari adalah {rata2_ispu:.2f}, menunjukkan bahwa kualitas udara cenderung berada pada kategori {'Baik/Sedang' if rata2_ispu < 100 else 'Tidak Sehat'}.
+    2. Nilai ISPU tertinggi adalah {max_ispu:.2f}, masuk dalam kategori '{st.session_state.df.loc[st.session_state.df['ISPU_max'].idxmax(), 'Kategori_ISPU']}'. Ini merupakan kondisi kritis yang memerlukan antisipasi lebih lanjut.
     3. Terdapat {hari_tidak_sehat} hari dengan kategori ISPU tidak sehat/sangat tidak sehat/berbahaya. Kelompok rentan seperti lansia dan penderita penyakit paru-paru perlu waspada.
     4. Polutan dominan berdasarkan konsentrasi tertinggi adalah '{polusi_tertinggi}', menunjukkan perlunya fokus mitigasi pada parameter tersebut.
     5. Terdapat {hari_dengan_polusi_tinggi} hari dengan polusi total sangat tinggi (>75% kuartil), yang mungkin dipengaruhi oleh peningkatan beberapa polutan secara bersamaan.
+    6. PM2.5 melebihi batas aman WHO (15.5 µg/m³) sebanyak {pm25_over_limit} hari, menunjukkan perlunya pengendalian emisi kendaraan dan industri.
+    7. PM10 melebihi batas aman WHO (50 µg/m³) sebanyak {pm10_over_limit} hari, menunjukkan polusi udara yang cukup signifikan di wilayah simulasi.
+    8. Ozon (O3) melebihi ambang batas aman sebanyak {o3_over_limit} hari, menunjukkan aktivitas fotokimia yang tinggi terutama di siang hari.
+    9. CO melebihi ambang batas sebanyak {co_over_limit} hari, mengindikasikan adanya peningkatan emisi kendaraan bermotor.
+    10. SO2 melebihi ambang batas sebanyak {so2_over_limit} hari, menunjukkan kontribusi aktivitas industri atau pembangkit listrik dalam memengaruhi kualitas udara.
+    11. NO2 melebihi ambang batas sebanyak {no2_over_limit} hari, mengindikasikan adanya peningkatan aktivitas kendaraan bermotor dan pembakaran bahan bakar fosil.
+    12. Polutan {max_pollutant} memiliki konsentrasi tertinggi di seluruh simulasi, menunjukkan bahwa polutan tersebut paling berkontribusi terhadap penurunan kualitas udara.
+    13. Polutan {min_pollutant} memiliki konsentrasi terendah secara rata-rata, menunjukkan bahwa sumber emisi polutan tersebut relatif terkendali.
     """
     
     rekomendasi = """
@@ -377,52 +466,78 @@ if st.sidebar.button("Generate Ulang Data"):
 
 # ====== STEP 3: HITUNG ISPU ======
 def calculate_ispu_pm25(pm25):
-    if pm25 <= 15.5: return pm25 * 50 / 15.5
-    elif pm25 <= 55.4: return 50 + (pm25 - 15.5) * 50 / (55.4 - 15.5)
-    elif pm25 <= 150.4: return 100 + (pm25 - 55.4) * 100 / (150.4 - 55.4)
-    elif pm25 <= 250.4: return 200 + (pm25 - 150.4) * 100 / (250.4 - 150.4)
-    elif pm25 <= 350.4: return 300 + (pm25 - 250.4) * 100 / (350.4 - 250.4)
-    else: return 400 + (pm25 - 350.4) * 100 / (500.4 - 350.4)
+    if pm25 <= 15.5:
+        return pm25 * 50 / 15.5
+    elif pm25 <= 55.4:
+        return 50 + (pm25 - 15.5) * 50 / (55.4 - 15.5)
+    elif pm25 <= 150.4:
+        return 100 + (pm25 - 55.4) * 100 / (150.4 - 55.4)
+    elif pm25 <= 250.4:
+        return 200 + (pm25 - 150.4) * 100 / (250.4 - 150.4)
+    else:
+        return 300 + (pm25 - 250.4) * 100 / (500 - 250.4)
 
 def calculate_ispu_pm10(pm10):
-    if pm10 <= 50: return pm10
-    elif pm10 <= 150: return 50 + (pm10 - 50) * 50 / 100
-    elif pm10 <= 350: return 100 + (pm10 - 150) * 100 / 200
-    elif pm10 <= 420: return 200 + (pm10 - 350) * 100 / 70
-    elif pm10 <= 500: return 300 + (pm10 - 420) * 100 / 80
-    else: return 400 + (pm10 - 500) * 100 / 100
+    if pm10 <= 50:
+        return pm10 * 50 / 50
+    elif pm10 <= 150:
+        return 50 + (pm10 - 50) * 50 / (150 - 50)
+    elif pm10 <= 350:
+        return 100 + (pm10 - 150) * 100 / (350 - 150)
+    elif pm10 <= 420:
+        return 200 + (pm10 - 350) * 100 / (420 - 350)
+    else:
+        return 300 + (pm10 - 420) * 100 / (500 - 420)
 
 def calculate_ispu_so2(so2):
-    if so2 <= 20: return so2 * 50 / 20
-    elif so2 <= 80: return 50 + (so2 - 20) * 50 / 60
-    elif so2 <= 365: return 100 + (so2 - 80) * 100 / 285
-    elif so2 <= 800: return 200 + (so2 - 365) * 100 / 435
-    elif so2 <= 1000: return 300 + (so2 - 800) * 100 / 200
-    else: return 400 + (so2 - 1000) * 100 / 1000
+    if so2 <= 52:
+        return so2 * 50 / 52
+    elif so2 <= 180:
+        return 50 + (so2 - 52) * 50 / (180 - 52)
+    elif so2 <= 365:
+        return 100 + (so2 - 180) * 100 / (365 - 180)
+    elif so2 <= 800:
+        return 200 + (so2 - 365) * 100 / (800 - 365)
+    else:
+        return 300 + (so2 - 800) * 100 / (1200 - 800)
 
 def calculate_ispu_no2(no2):
-    if no2 <= 30: return no2 * 50 / 30
-    elif no2 <= 60: return 50 + (no2 - 30) * 50 / 30
-    elif no2 <= 150: return 100 + (no2 - 60) * 100 / 90
-    elif no2 <= 200: return 200 + (no2 - 150) * 100 / 50
-    elif no2 <= 400: return 300 + (no2 - 200) * 100 / 200
-    else: return 400 + (no2 - 400) * 100 / 200
+    if no2 <= 80:
+        return no2 * 50 / 80
+    elif no2 <= 200:
+        return 50 + (no2 - 80) * 50 / (200 - 80)
+    elif no2 <= 1130:
+        return 100 + (no2 - 200) * 100 / (1130 - 200)
+    elif no2 <= 2000:
+        return 200 + (no2 - 1130) * 100 / (2000 - 1130)
+    else:
+        return 300 + (no2 - 2000) * 100 / (3000 - 2000)
+
 
 def calculate_ispu_co(co):
-    if co <= 5: return co * 50 / 5
-    elif co <= 10: return 50 + (co - 5) * 50 / 5
-    elif co <= 17: return 100 + (co - 10) * 100 / 7
-    elif co <= 34: return 200 + (co - 17) * 100 / 17
-    elif co <= 46: return 300 + (co - 34) * 100 / 12
-    else: return 400 + (co - 46) * 100 / 11.5
+    if co <= 4.0:
+        return co * 50 / 4.0
+    elif co <= 8.0:
+        return 50 + (co - 4.0) * 50 / (8.0 - 4.0)
+    elif co <= 15.0:
+        return 100 + (co - 8.0) * 100 / (15.0 - 8.0)
+    elif co <= 17.0:
+        return 200 + (co - 15.0) * 100 / (17.0 - 15.0)
+    else:
+        return 300 + (co - 17.0) * 100 / (30.0 - 17.0)
 
 def calculate_ispu_o3(o3):
-    if o3 <= 120: return o3 * 50 / 120
-    elif o3 <= 235: return 50 + (o3 - 120) * 50 / 115
-    elif o3 <= 400: return 100 + (o3 - 235) * 100 / 165
-    elif o3 <= 800: return 200 + (o3 - 400) * 100 / 400
-    elif o3 <= 1000: return 300 + (o3 - 800) * 100 / 200
-    else: return 400 + (o3 - 1000) * 100 / 200
+    if o3 <= 120:
+        return o3 * 50 / 120
+    elif o3 <= 235:
+        return 50 + (o3 - 120) * 50 / (235 - 120)
+    elif o3 <= 400:
+        return 100 + (o3 - 235) * 100 / (400 - 235)
+    elif o3 <= 800:
+        return 200 + (o3 - 400) * 100 / (800 - 400)
+    else:
+        return 300 + (o3 - 800) * 100 / (1000 - 800)
+
 
 # Hitung semua ISPU
 if 'ISPU_PM2_5' not in st.session_state.df.columns:
@@ -599,28 +714,6 @@ with tab2:
     st.caption("Diagram lingkaran dan batang menunjukkan distribusi kategori ISPU selama periode simulasi.")
     
     # ====== 4 DIAGRAM BARU ======
-    # 1. Line Chart PM2.5 dan PM10 (menggantikan scatter plot)
-    st.subheader("Tren Harian PM2.5 dan PM10")
-    st.markdown("""
-    **Penjelasan Diagram:**
-    - **Sumbu X**: Hari ke- (periode simulasi)
-    - **Sumbu Y**: Konsentrasi (µg/m³)
-    - Garis biru: Konsentrasi harian PM2.5
-    - Garis merah: Konsentrasi harian PM10
-    - Garis putus-putus: Batas aman WHO untuk masing-masing polutan
-    - Polutan dengan diameter lebih kecil (PM2.5) cenderung lebih berbahaya bagi kesehatan
-    """)
-    fig_line_pm = plt.figure(figsize=(14, 6))
-    plt.plot(st.session_state.df.index, st.session_state.df['PM2.5'], label='PM2.5', color='blue', alpha=0.7)
-    plt.plot(st.session_state.df.index, st.session_state.df['PM10'], label='PM10', color='red', alpha=0.7)
-    plt.axhline(y=25, color='blue', linestyle='--', alpha=0.3, label='Batas PM2.5 (WHO)')
-    plt.axhline(y=50, color='red', linestyle='--', alpha=0.3, label='Batas PM10 (WHO)')
-    plt.title('Perbandingan Tren Harian PM2.5 dan PM10')
-    plt.xlabel('Hari Simulasi')
-    plt.ylabel('Konsentrasi (µg/m³)')
-    plt.legend()
-    plt.grid(True)
-    st.pyplot(fig_line_pm)
     
     # 2. Bar Chart Polutan Dominan (menggunakan variabel utama)
     st.subheader("Polutan Dominan Penyebab ISPU Tertinggi")
@@ -630,7 +723,6 @@ with tab2:
     - **Sumbu Y**: Jumlah hari polutan tersebut menjadi penyebab ISPU tertinggi
     - Warna biru muda: Frekuensi dominansi masing-masing polutan
     - Garis grid: Membantu membaca nilai secara akurat
-    - PM2.5 biasanya paling dominan karena dampak kesehatan yang lebih besar
     """)
     fig_bar = plt.figure(figsize=(10, 6))
     polutan_dominan = st.session_state.df['Parameter_Dominan'].value_counts()
@@ -646,14 +738,14 @@ with tab2:
     st.subheader("Tren Polutan Utama")
     st.markdown("""
     **Penjelasan Diagram:**
-    - **Sumbu X**: Minggu ke- (dikonversi dari hari simulasi)
-    - **Sumbu Y**: Konsentrasi rata-rata mingguan (µg/m³)
+    - **Sumbu X**: Hari ke- (dikonversi dari hari simulasi)
+    - **Sumbu Y**: Konsentrasi harian (µg/m³)
     - Garis berwarna: Mewakili polutan berbeda
-    - Area terarsir: Variasi harian dalam minggu tersebut
+    - Area terarsir: Variasi harian dalam hari tersebut
     - Pola mingguan membantu identifikasi pengaruh aktivitas manusia
     """)
     fig_line = plt.figure(figsize=(14, 6))
-    for polutan in ['PM2.5', 'PM10', 'SO2', 'NO2']:
+    for polutan in ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']:
         plt.plot(st.session_state.df.index, st.session_state.df[polutan], label=polutan, alpha=0.7)
     plt.title('Tren Polutan Utama')
     plt.xlabel('Hari')
@@ -671,12 +763,108 @@ with tab2:
     - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
     - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
     - Garis KDE (Kernel Density Estimate): Estimasi kurva distribusi
-    - Garis vertikal: Menandai batas aman menurut WHO (25 µg/m³)
+    - Garis Merah batas aman ISPU
     """)
     fig_hist = plt.figure(figsize=(10, 6))
     sns.histplot(st.session_state.df['PM2.5'], bins=30, kde=True, color='teal')
+    plt.axvline(x=15.5, color='red', linestyle='--', label='Batas Aman ISPU')    
     plt.title('Distribusi Konsentrasi PM2.5')
     plt.xlabel('PM2.5 (µg/m³)')
+    plt.ylabel('Frekuensi')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    st.pyplot(fig_hist)
+
+    # 5. Histogram PM10
+    st.subheader("Distribusi PM10")
+    st.markdown("""
+    **Penjelasan Diagram:**
+    - **Sumbu X**: Rentang konsentrasi PM10 (µg/m³)
+    - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+    - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+    - Garis KDE (Kernel Density Estimate): Estimasi kurva distribusi
+    - Garis Merah batas aman ISPU
+    """)
+    fig_hist = plt.figure(figsize=(10, 6))
+    sns.histplot(st.session_state.df['PM10'], bins=30, kde=True, color='teal')
+    plt.axvline(x=50, color='red', linestyle='--', label='Batas Aman ISPU')
+    plt.title('Distribusi Konsentrasi PM10')
+    plt.xlabel('PM10 (µg/m³)')
+    plt.ylabel('Frekuensi')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    st.pyplot(fig_hist)
+
+    # 6. Histogram SO2
+    st.subheader("Distribusi SO2")
+    st.markdown("""
+    **Penjelasan Diagram:**
+    - **Sumbu X**: Rentang konsentrasi SO2 (µg/m³)
+    - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+    - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+    - Garis KDE: Estimasi kurva distribusi
+    - Garis Merah batas aman ISPU
+    """)
+    fig_hist = plt.figure(figsize=(10, 6))
+    sns.histplot(st.session_state.df['SO2'], bins=30, kde=True, color='teal')
+    plt.axvline(x=35, color='red', linestyle='--', label='Batas Aman ISPU')
+    plt.title('Distribusi Konsentrasi SO2')
+    plt.xlabel('SO2 (µg/m³)')
+    plt.ylabel('Frekuensi')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    st.pyplot(fig_hist)
+
+    # 7. Histogram NO2
+    st.subheader("Distribusi NO2")
+    st.markdown("""
+    **Penjelasan Diagram:**
+    - **Sumbu X**: Rentang konsentrasi NO2 (µg/m³)
+    - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+    - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+    - Garis KDE: Estimasi kurva distribusi
+    - Garis Merah batas aman ISPU
+    """)
+    fig_hist = plt.figure(figsize=(10, 6))
+    sns.histplot(st.session_state.df['NO2'], bins=30, kde=True, color='teal')
+    plt.axvline(x=80, color='red', linestyle='--', label='Batas Aman ISPU')
+    plt.title('Distribusi Konsentrasi NO2')
+    plt.xlabel('NO2 (µg/m³)')
+    plt.ylabel('Frekuensi')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    st.pyplot(fig_hist)
+
+    # 8. Histogram CO
+    st.subheader("Distribusi CO")
+    st.markdown("""
+    **Penjelasan Diagram:**
+    - **Sumbu X**: Rentang konsentrasi CO (µg/m³)
+    - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+    - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+    - Garis KDE: Estimasi kurva distribusi
+    - Garis Merah batas aman ISPU
+    """)
+    fig_hist = plt.figure(figsize=(10, 6))
+    sns.histplot(st.session_state.df['CO'], bins=30, kde=True, color='teal')
+    plt.axvline(x=4, color='red', linestyle='--', label='Batas Aman ISPU')
+    plt.title('Distribusi Konsentrasi CO')
+    plt.xlabel('CO (mg/m³)')
+    plt.ylabel('Frekuensi')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    st.pyplot(fig_hist)
+
+    # 9. Histogram O3
+    st.subheader("Distribusi O3")
+    st.markdown("""
+    **Penjelasan Diagram:**
+    - **Sumbu X**: Rentang konsentrasi O3 (µg/m³)
+    - **Sumbu Y**: Frekuensi kemunculan (jumlah hari)
+    - Batang histogram: Menunjukkan seberapa sering suatu konsentrasi terjadi
+    - Garis KDE: Estimasi kurva distribusi
+    - Garis Merah batas aman ISPU
+    """)
+    fig_hist = plt.figure(figsize=(10, 6))
+    sns.histplot(st.session_state.df['O3'], bins=30, kde=True, color='teal')
+    plt.axvline(x=120, color='red', linestyle='--', label='Batas Aman ISPU')
+    plt.title('Distribusi Konsentrasi O3')
+    plt.xlabel('O3 (µg/m³)')
     plt.ylabel('Frekuensi')
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     st.pyplot(fig_hist)
@@ -691,7 +879,19 @@ with tab3:
     hari_tidak_sehat = len(st.session_state.df[st.session_state.df['Kategori_ISPU'].isin(['Tidak Sehat', 'Sangat Tidak Sehat', 'Berbahaya'])])
     polusi_tertinggi = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].max().idxmax()
     hari_dengan_polusi_tinggi = len(st.session_state.df[st.session_state.df['Polusi_Total'] > st.session_state.df['Polusi_Total'].quantile(0.75)])
-    
+
+
+    pm25_over_limit = len(st.session_state.df[st.session_state.df['PM2.5'] > 15.5])
+    pm10_over_limit = len(st.session_state.df[st.session_state.df['PM10'] > 50])
+    o3_over_limit = len(st.session_state.df[st.session_state.df['O3'] > 120])
+    co_over_limit = len(st.session_state.df[st.session_state.df['CO'] > 5])
+    so2_over_limit = len(st.session_state.df[st.session_state.df['SO2'] > 20])
+    no2_over_limit = len(st.session_state.df[st.session_state.df['NO2'] > 30])
+    max_pollutant = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].max().idxmax()
+    min_pollutant = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].min().idxmax()
+    kategori_urut = ['Baik', 'Sedang', 'Tidak Sehat', 'Sangat Tidak Sehat', 'Berbahaya']
+    kategori_counts = st.session_state.df['Kategori_ISPU'].value_counts().reindex(kategori_urut, fill_value=0)
+
     # Tampilkan kesimpulan
     st.write(f"""
     1. Rata-rata nilai ISPU selama {st.session_state.n_samples} hari adalah {rata2_ispu:.2f}, menunjukkan bahwa kualitas udara cenderung berada pada kategori {'Baik/Sedang' if rata2_ispu < 100 else 'Tidak Sehat'}.
@@ -699,6 +899,14 @@ with tab3:
     3. Terdapat {hari_tidak_sehat} hari dengan kategori ISPU tidak sehat/sangat tidak sehat/berbahaya. Kelompok rentan seperti lansia dan penderita penyakit paru-paru perlu waspada.
     4. Polutan dominan berdasarkan konsentrasi tertinggi adalah '{polusi_tertinggi}', menunjukkan perlunya fokus mitigasi pada parameter tersebut.
     5. Terdapat {hari_dengan_polusi_tinggi} hari dengan polusi total sangat tinggi (>75% kuartil), yang mungkin dipengaruhi oleh peningkatan beberapa polutan secara bersamaan.
+    6. PM2.5 melebihi batas aman WHO (15.5 µg/m³) sebanyak {pm25_over_limit} hari, menunjukkan perlunya pengendalian emisi kendaraan dan industri.
+    7. PM10 melebihi batas aman WHO (50 µg/m³) sebanyak {pm10_over_limit} hari, menunjukkan polusi udara yang cukup signifikan di wilayah simulasi.
+    8. Ozon (O3) melebihi ambang batas aman sebanyak {o3_over_limit} hari, menunjukkan aktivitas fotokimia yang tinggi terutama di siang hari.
+    9. CO melebihi ambang batas sebanyak {co_over_limit} hari, mengindikasikan adanya peningkatan emisi kendaraan bermotor.
+    10. SO2 melebihi ambang batas sebanyak {so2_over_limit} hari, menunjukkan kontribusi aktivitas industri atau pembangkit listrik dalam memengaruhi kualitas udara.
+    11. NO2 melebihi ambang batas sebanyak {no2_over_limit} hari, mengindikasikan adanya peningkatan aktivitas kendaraan bermotor dan pembakaran bahan bakar fosil.
+    12. Polutan {max_pollutant} memiliki konsentrasi tertinggi di seluruh simulasi, menunjukkan bahwa polutan tersebut paling berkontribusi terhadap penurunan kualitas udara.
+    13. Polutan {min_pollutant} memiliki konsentrasi terendah secara rata-rata, menunjukkan bahwa sumber emisi polutan tersebut relatif terkendali.
     """)
     
     st.write("""
