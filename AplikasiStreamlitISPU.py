@@ -1213,7 +1213,7 @@ elif page == "Analisis Data":
             
             # Create temporal analysis
             temp_df = filtered_df.copy()
-            temp_df['Date'] = pd.to_datetime('2025-01-01') + pd.to_timedelta(temp_df.index, unit='D')
+            temp_df['Date'] = pd.to_datetime('2022-12-01') + pd.to_timedelta(temp_df.index, unit='D')
             temp_df.set_index('Date', inplace=True)
             
             resampled = temp_df.resample(freq_map[resample_freq])[selected_pollutant].mean()
