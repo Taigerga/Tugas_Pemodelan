@@ -371,6 +371,14 @@ def create_word_document(df, params, n_samples):
     min_pollutant = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].min().idxmax()
     kategori_urut = ['Baik', 'Sedang', 'Tidak Sehat', 'Sangat Tidak Sehat', 'Berbahaya']
     kategori_counts = st.session_state.df['Kategori_ISPU'].value_counts().reindex(kategori_urut, fill_value=0)
+    mean_pollutants = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].mean().sort_values()
+    least_harmful = mean_pollutants.idxmin()
+    min_pollutants = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].min().sort_values()
+    cleanest_pollutant = min_pollutants.idxmin()
+    std_pollutants = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].std().sort_values()
+    most_stable = std_pollutants.idxmin()
+
+
 
     kesimpulan = f"""
     1. Rata-rata nilai ISPU selama {st.session_state.n_samples} hari adalah {rata2_ispu:.2f}, menunjukkan bahwa kualitas udara cenderung berada pada kategori {'Baik/Sedang' if rata2_ispu < 100 else 'Tidak Sehat'}.
@@ -385,14 +393,22 @@ def create_word_document(df, params, n_samples):
     10. SO2 melebihi ambang batas sebanyak {so2_over_limit} hari, menunjukkan kontribusi aktivitas industri atau pembangkit listrik dalam memengaruhi kualitas udara.
     11. NO2 melebihi ambang batas sebanyak {no2_over_limit} hari, mengindikasikan adanya peningkatan aktivitas kendaraan bermotor dan pembakaran bahan bakar fosil.
     12. Polutan {max_pollutant} memiliki konsentrasi tertinggi di seluruh simulasi, menunjukkan bahwa polutan tersebut paling berkontribusi terhadap penurunan kualitas udara.
-    13. Polutan {min_pollutant} memiliki konsentrasi terendah secara rata-rata, menunjukkan bahwa sumber emisi polutan tersebut relatif terkendali.
+    13. Polutan {min_pollutant} memiliki konsentrasi tertinggi di minimim.
+    14. {least_harmful} merupakan polutan dengan konsentrasi rata-rata terendah (**{mean_pollutants[least_harmful]:.2f} µg/m³**). Sumber emisi {least_harmful} relatif lebih terkendali.  
+    15. {cleanest_pollutant} mencapai level terendah (**{min_pollutants[cleanest_pollutant]:.2f} µg/m³**) saat udara paling bersih.
+    16. {most_stable} memiliki fluktuasi harian paling stabil (deviasi **{std_pollutants[most_stable]:.2f} µg/m³**).  
     """
     
     rekomendasi = """
-    Rekomendasi:
+    **Rekomendasi:**
     - Pengurangan emisi kendaraan bermotor dan aktivitas industri
     - Edukasi publik tentang cara melindungi diri dari paparan polusi udara
     - Peningkatan pemantauan kualitas udara di area dengan risiko tinggi
+    - Fokus pada pengendalian polutan dominan yang teridentifikasi
+    - Implementasi sistem peringatan dini ketika konsentrasi polutan mencapai level berbahaya
+    - Fokus pada pengendalian polutan dengan **rata-rata tertinggi** terlebih dahulu  
+    - Manfaatkan data polutan **paling stabil** sebagai baseline pemantauan  
+    - Gunakan kriteria **minimum terendah** untuk menetapkan target kualitas udara bersih 
     """
     
     save_to_word(doc, "Kesimpulan Simulasi", content=kesimpulan)
@@ -913,6 +929,13 @@ with tab3:
     min_pollutant = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].min().idxmax()
     kategori_urut = ['Baik', 'Sedang', 'Tidak Sehat', 'Sangat Tidak Sehat', 'Berbahaya']
     kategori_counts = st.session_state.df['Kategori_ISPU'].value_counts().reindex(kategori_urut, fill_value=0)
+    mean_pollutants = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].mean().sort_values()
+    least_harmful = mean_pollutants.idxmin()
+    min_pollutants = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].min().sort_values()
+    cleanest_pollutant = min_pollutants.idxmin()
+    std_pollutants = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].std().sort_values()
+    most_stable = std_pollutants.idxmin()
+
 
     # Tampilkan kesimpulan
     st.write(f"""
@@ -928,7 +951,10 @@ with tab3:
     10. SO2 melebihi ambang batas sebanyak {so2_over_limit} hari, menunjukkan kontribusi aktivitas industri atau pembangkit listrik dalam memengaruhi kualitas udara.
     11. NO2 melebihi ambang batas sebanyak {no2_over_limit} hari, mengindikasikan adanya peningkatan aktivitas kendaraan bermotor dan pembakaran bahan bakar fosil.
     12. Polutan {max_pollutant} memiliki konsentrasi tertinggi di seluruh simulasi, menunjukkan bahwa polutan tersebut paling berkontribusi terhadap penurunan kualitas udara.
-    13. Polutan {min_pollutant} memiliki konsentrasi terendah secara rata-rata, menunjukkan bahwa sumber emisi polutan tersebut relatif terkendali.
+    13. Polutan {min_pollutant} memiliki konsentrasi tertinggi di minimim.
+    14. {least_harmful} merupakan polutan dengan konsentrasi rata-rata terendah (**{mean_pollutants[least_harmful]:.2f} µg/m³**). Sumber emisi {least_harmful} relatif lebih terkendali.  
+    15. {cleanest_pollutant} mencapai level terendah (**{min_pollutants[cleanest_pollutant]:.2f} µg/m³**) saat udara paling bersih.
+    16. {most_stable} memiliki fluktuasi harian paling stabil (deviasi **{std_pollutants[most_stable]:.2f} µg/m³**).  
     """)
     
     st.write("""
@@ -938,6 +964,9 @@ with tab3:
     - Peningkatan pemantauan kualitas udara di area dengan risiko tinggi
     - Fokus pada pengendalian polutan dominan yang teridentifikasi
     - Implementasi sistem peringatan dini ketika konsentrasi polutan mencapai level berbahaya
+    - Fokus pada pengendalian polutan dengan **rata-rata tertinggi** terlebih dahulu  
+    - Manfaatkan data polutan **paling stabil** sebagai baseline pemantauan  
+    - Gunakan kriteria **minimum terendah** untuk menetapkan target kualitas udara bersih 
     """)
 
 with tab4:
