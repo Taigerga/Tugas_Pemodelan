@@ -164,11 +164,11 @@ def create_word_document(df, params, n_samples):
     
     # Kategori ISPU
     df['Kategori_ISPU'] = df['ISPU_max'].apply(lambda x: "Baik" if x <= 50 else 
-                                              "Sedang" if x <= 100 else 
-                                              "Tidak Sehat" if x <= 200 else 
-                                              "Sangat Tidak Sehat" if x <= 300 else 
-                                              "Berbahaya")
-    
+                                            "Sedang" if x <= 100 else 
+                                            "Tidak Sehat" if x <= 200 else 
+                                            "Sangat Tidak Sehat" if x <= 300 else 
+                                            "Berbahaya")
+
     kategori_counts = df['Kategori_ISPU'].value_counts()
     warna_kategori = {
         'Baik': 'green',
@@ -177,75 +177,88 @@ def create_word_document(df, params, n_samples):
         'Sangat Tidak Sehat': 'red',
         'Berbahaya': 'darkred'
     }
-    colors = [warna_kategori[k] for k in kategori_counts.index]
-    
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-    ax1.pie(kategori_counts, labels=kategori_counts.index,
-            autopct='%1.1f%%', startangle=90, colors=colors,
-            shadow=True, textprops={'color': 'black', 'fontsize': 10})
-    ax1.set_title('Distribusi Persentase Kategori ISPU')
-    ax1.axis('equal')
-    
-    bars = ax2.bar(kategori_counts.index, kategori_counts.values, color=colors, edgecolor='black')
-    ax2.set_title('Jumlah Hari per Kategori ISPU')
-    ax2.set_xlabel('Kategori ISPU')
-    ax2.set_ylabel('Jumlah Hari')
-    ax2.grid(axis='y', linestyle='--', alpha=0.7)
-    ax2.set_axisbelow(True)
-    for bar in bars:
-        height = bar.get_height()
-        ax2.text(bar.get_x() + bar.get_width()/2., height + 0.5, f'{int(height)}\n({height/len(df):.1%})',
-                ha='center', va='bottom', fontsize=9)
-    
-    plt.tight_layout()
-    save_to_word(doc, "Distribusi Kategori ISPU", 
-                content="""**Diagram lingkaran dan batang menunjukkan distribusi kategori ISPU selama periode simulasi.**
-                           **Distribusi Kategori Kualitas Udara:**
-                           - **Baik (0-50)**: Tidak ada risiko kesehatan
-                           - **Sedang (51-100)**: Kelompok sensitif mungkin terpengaruh
-                           - **Tidak Sehat (101-200)**: Seluruh populasi mulai terpengaruh
-                           - **Sangat Tidak Sehat (201-300)**: Peringatan kesehatan serius
-                           - **Berbahaya (>300)**: Darurat kesehatan publik
-                """,
-                image=True)
 
-    # Polutan Dominan
-    polutan_dominan = df['Parameter_Dominan'].value_counts()
-    plt.figure(figsize=(10, 6))
-    polutan_dominan.plot(kind='bar', color='skyblue')
-    plt.title('Frekuensi Polutan Dominan Penyebab ISPU Tertinggi')
-    plt.xlabel('Polutan')
-    plt.ylabel('Jumlah Hari')
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
-    save_to_word(doc, "Polutan Dominan Penyebab ISPU Tertinggi",
-                content="""**Diagram batang menunjukkan polutan mana yang paling sering menjadi penyebab ISPU tertinggi.**
-                           **Penjelasan Diagram:**
-                           - **Sumbu X**: Nama polutan (PM2.5, PM10, SO2, NO2, CO, O3)
-                           - **Sumbu Y**: Jumlah hari polutan tersebut menjadi penyebab ISPU tertinggi
-                           - Warna biru muda: Frekuensi dominansi masing-masing polutan
-                           - Garis grid: Membantu membaca nilai secara akurat
-                """,
-                image=True)
-    
-    # Line Chart Polutan Utama
-    plt.figure(figsize=(14, 6))
-    for polutan in ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']:
-        plt.plot(df.index, df[polutan], label=polutan, alpha=0.7)
-    plt.title('Tren Polutan Utama')
-    plt.xlabel('Hari')
-    plt.ylabel('Konsentrasi')
-    plt.legend()
-    plt.grid(True)
-    save_to_word(doc, "Tren Polutan Utama",
-                content="""**Line chart menunjukkan tren beberapa polutan utama selama periode simulasi.**
-                           **Penjelasan Diagram:**
-                           - **Sumbu X**: Hari ke- (dikonversi dari hari simulasi)
-                           - **Sumbu Y**: Konsentrasi harian (µg/m³)
-                           - Garis berwarna: Mewakili polutan berbeda
-                           - Area terarsir: Variasi harian dalam Hari tersebut
-                           - Pola mingguan membantu identifikasi pengaruh aktivitas manusia
-                """,
-                image=True)
+    # Filter out categories with 0 count
+    filtered_counts = kategori_counts[kategori_counts > 0]
+    filtered_colors = [warna_kategori[k] for k in filtered_counts.index]
+
+    # Create visualizations only if there are categories to show
+    if not filtered_counts.empty:
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        
+        # Pie Chart
+        ax1.pie(filtered_counts, labels=filtered_counts.index,
+                autopct='%1.1f%%', startangle=90, colors=filtered_colors,
+                shadow=True, textprops={'color': 'black', 'fontsize': 10})
+        ax1.set_title('Distribusi Persentase Kategori ISPU (Tanpa Kategori 0%)')
+        ax1.axis('equal')
+        
+        # Bar Chart
+        bars = ax2.bar(filtered_counts.index, filtered_counts.values, color=filtered_colors, edgecolor='black')
+        ax2.set_title('Jumlah Hari per Kategori ISPU (Tanpa Kategori 0%)')
+        ax2.set_xlabel('Kategori ISPU')
+        ax2.set_ylabel('Jumlah Hari')
+        ax2.grid(axis='y', linestyle='--', alpha=0.7)
+        ax2.set_axisbelow(True)
+        for bar in bars:
+            height = bar.get_height()
+            ax2.text(bar.get_x() + bar.get_width()/2., height + 0.5, 
+                    f'{int(height)}\n({height/len(df):.1%})',
+                    ha='center', va='bottom', fontsize=9)
+        
+        plt.tight_layout()
+        
+        # Save to Word document
+        save_to_word(doc, "Distribusi Kategori ISPU", 
+                    content="""**Diagram lingkaran dan batang menunjukkan distribusi kategori ISPU selama periode simulasi (kategori dengan 0% tidak ditampilkan).**
+                            **Distribusi Kategori Kualitas Udara:**
+                            - **Baik (0-50)**: Tidak ada risiko kesehatan
+                            - **Sedang (51-100)**: Kelompok sensitif mungkin terpengaruh
+                            - **Tidak Sehat (101-200)**: Seluruh populasi mulai terpengaruh
+                            - **Sangat Tidak Sehat (201-300)**: Peringatan kesehatan serius
+                            - **Berbahaya (>300)**: Darurat kesehatan publik
+                    """,
+                    image=True)
+    else:
+        st.warning("Tidak ada data kategori ISPU yang tersedia untuk ditampilkan.")
+
+        # Polutan Dominan
+        polutan_dominan = df['Parameter_Dominan'].value_counts()
+        plt.figure(figsize=(10, 6))
+        polutan_dominan.plot(kind='bar', color='skyblue')
+        plt.title('Frekuensi Polutan Dominan Penyebab ISPU Tertinggi')
+        plt.xlabel('Polutan')
+        plt.ylabel('Jumlah Hari')
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        save_to_word(doc, "Polutan Dominan Penyebab ISPU Tertinggi",
+                    content="""**Diagram batang menunjukkan polutan mana yang paling sering menjadi penyebab ISPU tertinggi.**
+                            **Penjelasan Diagram:**
+                            - **Sumbu X**: Nama polutan (PM2.5, PM10, SO2, NO2, CO, O3)
+                            - **Sumbu Y**: Jumlah hari polutan tersebut menjadi penyebab ISPU tertinggi
+                            - Warna biru muda: Frekuensi dominansi masing-masing polutan
+                            - Garis grid: Membantu membaca nilai secara akurat
+                    """,
+                    image=True)
+        
+        # Line Chart Polutan Utama
+        plt.figure(figsize=(14, 6))
+        for polutan in ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']:
+            plt.plot(df.index, df[polutan], label=polutan, alpha=0.7)
+        plt.title('Tren Polutan Utama')
+        plt.xlabel('Hari')
+        plt.ylabel('Konsentrasi')
+        plt.legend()
+        plt.grid(True)
+        save_to_word(doc, "Tren Polutan Utama",
+                    content="""**Line chart menunjukkan tren beberapa polutan utama selama periode simulasi.**
+                            **Penjelasan Diagram:**
+                            - **Sumbu X**: Hari ke- (dikonversi dari hari simulasi)
+                            - **Sumbu Y**: Konsentrasi harian (µg/m³)
+                            - Garis berwarna: Mewakili polutan berbeda
+                            - Area terarsir: Variasi harian dalam Hari tersebut
+                            - Pola mingguan membantu identifikasi pengaruh aktivitas manusia
+                    """,
+                    image=True)
 
     #Histogram PM2.5
     plt.figure(figsize=(10, 6))
@@ -769,29 +782,39 @@ with tab2:
     }
     colors = [warna_kategori[k] for k in kategori_counts.index]
     
-    # Pie Chart
-    fig5, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
-    ax1.pie(kategori_counts, labels=kategori_counts.index,
-            autopct='%1.1f%%', startangle=90, colors=colors,
-            shadow=True, textprops={'color': 'black', 'fontsize': 10})
-    ax1.set_title('Distribusi Persentase Kategori ISPU')
-    ax1.axis('equal')
-    
-    # Bar Chart
-    bars = ax2.bar(kategori_counts.index, kategori_counts.values, color=colors, edgecolor='black')
-    ax2.set_title('Jumlah Hari per Kategori ISPU')
-    ax2.set_xlabel('Kategori ISPU')
-    ax2.set_ylabel('Jumlah Hari')
-    ax2.grid(axis='y', linestyle='--', alpha=0.7)
-    ax2.set_axisbelow(True)
-    for bar in bars:
-        height = bar.get_height()
-        ax2.text(bar.get_x() + bar.get_width()/2., height + 0.5, f'{int(height)}\n({height/len(st.session_state.df):.1%})',
-                ha='center', va='bottom', fontsize=9)
-    
-    plt.tight_layout()
-    st.pyplot(fig5)
-    st.caption("Diagram lingkaran dan batang menunjukkan distribusi kategori ISPU selama periode simulasi.")
+    # Filter out categories with 0 count
+    filtered_counts = kategori_counts[kategori_counts > 0]
+    filtered_colors = [colors[i] for i in range(len(kategori_counts)) if kategori_counts[i] > 0]
+
+    # Create visualizations only if there are categories to show
+    if not filtered_counts.empty:
+        fig5, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        
+        # Pie Chart
+        ax1.pie(filtered_counts, labels=filtered_counts.index,
+                autopct='%1.1f%%', startangle=90, colors=filtered_colors,
+                shadow=True, textprops={'color': 'black', 'fontsize': 10})
+        ax1.set_title('Distribusi Persentase Kategori ISPU (Tanpa Kategori 0%)')
+        ax1.axis('equal')
+        
+        # Bar Chart
+        bars = ax2.bar(filtered_counts.index, filtered_counts.values, color=filtered_colors, edgecolor='black')
+        ax2.set_title('Jumlah Hari per Kategori ISPU (Tanpa Kategori 0%)')
+        ax2.set_xlabel('Kategori ISPU')
+        ax2.set_ylabel('Jumlah Hari')
+        ax2.grid(axis='y', linestyle='--', alpha=0.7)
+        ax2.set_axisbelow(True)
+        for bar in bars:
+            height = bar.get_height()
+            ax2.text(bar.get_x() + bar.get_width()/2., height + 0.5, 
+                    f'{int(height)}\n({height/len(st.session_state.df):.1%})',
+                    ha='center', va='bottom', fontsize=9)
+        
+        plt.tight_layout()
+        st.pyplot(fig5)
+        st.caption("Diagram lingkaran dan batang menunjukkan distribusi kategori ISPU selama periode simulasi (kategori dengan 0% tidak ditampilkan).")
+    else:
+        st.warning("Tidak ada data kategori ISPU yang tersedia untuk ditampilkan.")
     
     # ====== 4 DIAGRAM BARU ======
     
@@ -1037,12 +1060,6 @@ with tab4:
     
     st.dataframe(param_table)
     
-    st.markdown("""
-    **Keterangan:**
-    - **Mean**: Rata-rata konsentrasi polutan dalam data asli
-    - **Std Dev**: Standar deviasi konsentrasi polutan
-    - Parameter ini digunakan untuk membangkitkan data simulasi
-    """)
 
 # Download buttons
 st.sidebar.header("Unduh Hasil")
