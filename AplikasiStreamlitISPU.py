@@ -420,10 +420,10 @@ if page == "Simulasi ISPU":
         5. Terdapat {hari_dengan_polusi_tinggi} hari dengan polusi total sangat tinggi (>75% kuartil), yang mungkin dipengaruhi oleh peningkatan beberapa polutan secara bersamaan.
         6. PM2.5 melebihi batas aman ISPU (15.5 µg/m³) sebanyak {pm25_over_limit} hari, menunjukkan perlunya pengendalian emisi kendaraan dan industri.
         7. PM10 melebihi batas aman ISPU (50 µg/m³) sebanyak {pm10_over_limit} hari, menunjukkan polusi udara yang cukup signifikan di wilayah simulasi.
-        8. Ozon (O3) melebihi ambang batas aman sebanyak {o3_over_limit} hari, menunjukkan aktivitas fotokimia yang tinggi terutama di siang hari.
-        9. CO melebihi ambang batas sebanyak {co_over_limit} hari, mengindikasikan adanya peningkatan emisi kendaraan bermotor.
-        10. SO2 melebihi ambang batas sebanyak {so2_over_limit} hari, menunjukkan kontribusi aktivitas industri atau pembangkit listrik dalam memengaruhi kualitas udara.
-        11. NO2 melebihi ambang batas sebanyak {no2_over_limit} hari, mengindikasikan adanya peningkatan aktivitas kendaraan bermotor dan pembakaran bahan bakar fosil.
+        8. Ozon (O3) melebihi ambang batas aman sebanyak {o3_over_limit} hari.
+        9. CO melebihi ambang batas sebanyak {co_over_limit} hari.
+        10. SO2 melebihi ambang batas sebanyak {so2_over_limit}.
+        11. NO2 melebihi ambang batas sebanyak {no2_over_limit}.
         12. Polutan {max_pollutant} memiliki konsentrasi tertinggi di seluruh simulasi, menunjukkan bahwa polutan tersebut paling berkontribusi terhadap penurunan kualitas udara.
         13. Polutan {min_pollutant} memiliki konsentrasi tertinggi di minimim.
         14. {least_harmful} merupakan polutan dengan konsentrasi rata-rata terendah (**{mean_pollutants[least_harmful]:.2f} µg/m³**). Sumber emisi {least_harmful} relatif lebih terkendali.  
@@ -1018,10 +1018,10 @@ if page == "Simulasi ISPU":
         5. Terdapat {hari_dengan_polusi_tinggi} hari dengan polusi total sangat tinggi (>75% kuartil), yang mungkin dipengaruhi oleh peningkatan beberapa polutan secara bersamaan.
         6. PM2.5 melebihi batas aman ISPU (15.5 µg/m³) sebanyak {pm25_over_limit} hari, menunjukkan perlunya pengendalian emisi kendaraan dan industri.
         7. PM10 melebihi batas aman ISPU (50 µg/m³) sebanyak {pm10_over_limit} hari, menunjukkan polusi udara yang cukup signifikan di wilayah simulasi.
-        8. Ozon (O3) melebihi ambang batas aman sebanyak {o3_over_limit} hari, menunjukkan aktivitas fotokimia yang tinggi terutama di siang hari.
-        9. CO melebihi ambang batas sebanyak {co_over_limit} hari, mengindikasikan adanya peningkatan emisi kendaraan bermotor.
-        10. SO2 melebihi ambang batas sebanyak {so2_over_limit} hari, menunjukkan kontribusi aktivitas industri atau pembangkit listrik dalam memengaruhi kualitas udara.
-        11. NO2 melebihi ambang batas sebanyak {no2_over_limit} hari, mengindikasikan adanya peningkatan aktivitas kendaraan bermotor dan pembakaran bahan bakar fosil.
+        8. Ozon (O3) melebihi ambang batas aman sebanyak {o3_over_limit} hari.
+        9. CO melebihi ambang batas sebanyak {co_over_limit} hari.
+        10. SO2 melebihi ambang batas sebanyak {so2_over_limit} hari.
+        11. NO2 melebihi ambang batas sebanyak {no2_over_limit} hari.
         12. Polutan {max_pollutant} memiliki konsentrasi tertinggi di seluruh simulasi, menunjukkan bahwa polutan tersebut paling berkontribusi terhadap penurunan kualitas udara.
         13. Polutan {min_pollutant} memiliki konsentrasi tertinggi di minimum.
         14. {least_harmful} merupakan polutan dengan konsentrasi rata-rata terendah (**{mean_pollutants[least_harmful]:.2f} µg/m³**). Sumber emisi {least_harmful} relatif lebih terkendali.  
