@@ -446,11 +446,32 @@ if st.session_state.params is None:
 def generate_simulation(n_samples=365):
     rng = np.random.default_rng()
     df = pd.DataFrame()
+    
     for col in st.session_state.df_excel.columns:
         dist_type, mu, std = st.session_state.params[col]
-        data = np.round(rng.normal(mu, std, n_samples), 2)
-        df[col] = pd.Series(data).clip(lower=0)
+        
+        # 1. Generate data normal
+        data = rng.normal(mu, std, n_samples)
+        
+        # 2. Handle nilai negatif dengan lebih elegan
+        neg_indices = data < 0
+        
+        if np.any(neg_indices):
+            # Hitung probabilitas kumulatif untuk nilai negatif
+            cdf_neg = norm.cdf(0, loc=mu, scale=std)
+            
+            # Generate nilai baru dari truncated normal (0 sampai infinity)
+            truncated_values = mu + std * rng.standard_normal(size=np.sum(neg_indices))
+            truncated_values = np.abs(truncated_values)  # Refleksi nilai
+            
+            # Gabungkan dengan data positif
+            data[neg_indices] = truncated_values
+        
+        df[col] = np.round(data, 2)
+    
     return df
+
+
 
 # User input for number of samples
 st.session_state.n_samples = st.sidebar.number_input("Jumlah Sampel Hari", min_value=30, max_value=1000, value=365)
