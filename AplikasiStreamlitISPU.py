@@ -624,6 +624,7 @@ if show_raw_data:
     st.subheader("Data Mentah Simulasi")
     st.dataframe(st.session_state.df)
 
+
 # Tab layout
 tab1, tab2, tab3, tab4 = st.tabs(["Distribusi Parameter", "Visualisasi ISPU", "Kesimpulan", "Parameter Dari File Excel"])
 
@@ -643,15 +644,28 @@ with tab1:
     
     # Buat tabel parameter
     param_table = pd.DataFrame(columns=['Polutan', 'Distribusi', 'Parameter 1', 'Parameter 2'])
-    
+    st.session_state.params_simulasi = {}  # <-- Buat variabel baru
+
+    for col in ['PM2.5', 'PM10', 'O3']:
+        data = st.session_state.df[col]  # <-- Gunakan data simulasi
+        params = weibull_min.fit(data, floc=0)
+        st.session_state.params_simulasi[col] = ('Weibull', *params)
+
+    for col in ['SO2', 'NO2', 'CO']:
+        mu, std = norm.fit(st.session_state.df[col])
+        st.session_state.params_simulasi[col] = ('Normal', mu, std)
     for col in ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']:
-        dist_type, *dist_params = st.session_state.params[col]
+        dist_type, *dist_params = st.session_state.params_simulasi[col]
         if dist_type == 'Weibull':
-            param_table.loc[len(param_table)] = [col, 'Weibull', f'Shape: {dist_params[0]:.2f}', f'Scale: {dist_params[2]:.2f}']
+            param_table.loc[len(param_table)] = [col, 'Weibull', f'Shape k: {dist_params[0]:.2f}', f'Scale λ: {dist_params[2]:.2f}']
         else:
             param_table.loc[len(param_table)] = [col, 'Normal', f'Mean: {dist_params[0]:.2f}', f'Std: {dist_params[1]:.2f}']
     
     st.dataframe(param_table)
+
+
+
+
 
     # Plot distribusi parameter
     st.subheader("Distribusi Parameter dengan Kurva Fit")
@@ -995,28 +1009,27 @@ with tab4:
     st.header("Distribusi Parameter Polutan Excel")
     
     # ====== STATISTIK SUMMARY DAN PARAMETER ======
-    st.subheader("Ringkasan Statistik Simulasi Excel")
+    st.subheader("Ringkasan Statistik Excel")
     
     # 1. Statistik Deskriptif (dari data Excel)
     st.markdown("**Statistik Deskriptif (µg/m³):**")
     summary_stats = st.session_state.df_excel[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].describe().round(2)
     st.dataframe(summary_stats)
     
-    # 2. Parameter Distribusi (dari data Excel asli)
-    st.markdown("**Parameter Distribusi Normal (Dihitung dari Data Asli):**")
+    # 2. Parameter Distribusi (dari data Excel)
+    st.markdown("**Parameter Distribusi (Dihitung dari Data Excel):**")
     
-    # Hitung parameter dari data Excel
-    original_params = []
+    # Buat tabel parameter
+    param_table = pd.DataFrame(columns=['Polutan', 'Distribusi', 'Parameter 1', 'Parameter 2'])
+    
     for col in ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']:
-        mu, std = norm.fit(st.session_state.df_excel[col])
-        original_params.append({
-            'Polutan': col,
-            'Mean (µg/m³)': mu,
-            'Std Dev (µg/m³)': std
-        })
+        dist_type, *dist_params = st.session_state.params[col]
+        if dist_type == 'Weibull':
+            param_table.loc[len(param_table)] = [col, 'Weibull', f'Shape k: {dist_params[0]:.2f}', f'Scale λ: {dist_params[2]:.2f}']
+        else:
+            param_table.loc[len(param_table)] = [col, 'Normal', f'Mean: {dist_params[0]:.2f}', f'Std: {dist_params[1]:.2f}']
     
-    params_df = pd.DataFrame(original_params)
-    st.dataframe(params_df.round(2))
+    st.dataframe(param_table)
     
     st.markdown("""
     **Keterangan:**
