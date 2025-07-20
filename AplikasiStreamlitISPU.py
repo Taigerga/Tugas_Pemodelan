@@ -75,27 +75,35 @@ def create_word_document(df, params, n_samples):
     doc.add_paragraph("Catatan: CO ditampilkan dalam µg/m³ (tanpa konversi)")
     
     # 2. Parameter Distribusi
-    doc.add_paragraph().add_run("\nParameter Distribusi").bold = True
-    
-    # Buat tabel parameter
-    param_table = doc.add_table(rows=7, cols=4)
+    doc.add_paragraph().add_run("\nParameter Distribusi (Dihitung dari Data Historis)").bold = True
+
+    # Buat tabel parameter dengan format yang berbeda untuk Normal dan Weibull
+    param_table = doc.add_table(rows=7, cols=4)  # 4 kolom: Polutan, Distribusi, Parameter 1, Parameter 2
     param_table.style = 'Table Grid'
-    
+
     # Header
-    param_table.cell(0,0).text = "Polutan"
-    param_table.cell(0,1).text = "Distribusi"
-    param_table.cell(0,2).text = "Parameter 1"
-    param_table.cell(0,3).text = "Parameter 2"
-    
+    headers = ["Polutan", "Distribusi", "Parameter 1", "Parameter 2"]
+    for j, header in enumerate(headers):
+        param_table.cell(0,j).text = header
+
     # Isi data
     for i, col in enumerate(['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3'], start=1):
-        dist_type, *dist_params = params[col]
+        dist_type, *dist_params = st.session_state.params_simulasi[col]
         param_table.cell(i,0).text = col
         param_table.cell(i,1).text = dist_type
-        param_table.cell(i,2).text = f"{dist_params[0]:.2f}"
-        param_table.cell(i,3).text = f"{dist_params[1]:.2f}" if len(dist_params) > 1 else "-"
-    
-    doc.add_paragraph("Parameter ini digunakan sebagai dasar simulasi data")
+        
+        if dist_type == 'Weibull':
+            c, loc, scale = dist_params
+            param_table.cell(i,2).text = f"Shape (k): {c:.2f}"
+            param_table.cell(i,3).text = f"Scale (λ): {scale:.2f}"
+        else:  # Normal
+            mu, std = dist_params
+            param_table.cell(i,2).text = f"Mean: {mu:.2f}"
+            param_table.cell(i,3).text = f"Std: {std:.2f}"
+
+    doc.add_paragraph("Catatan:")
+    doc.add_paragraph("- Weibull: Shape (k) dan Scale (λ)")
+    doc.add_paragraph("- Normal: Mean dan Standard Deviation")
     
     # Distribusi Parameter
     plt.figure(figsize=(15, 10))
@@ -662,8 +670,6 @@ with tab1:
             param_table.loc[len(param_table)] = [col, 'Normal', f'Mean: {dist_params[0]:.2f}', f'Std: {dist_params[1]:.2f}']
     
     st.dataframe(param_table)
-
-
 
 
 
