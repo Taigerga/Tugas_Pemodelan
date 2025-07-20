@@ -482,13 +482,35 @@ def generate_simulation(n_samples=365):
             # Generate data Weibull untuk PM2.5, PM10, dan O3
             c, loc, scale = dist_params
             data = weibull_min.rvs(c, loc, scale, size=n_samples, random_state=rng)
-        else:
-            # Generate data Normal untuk SO2, NO2, dan CO
+            
+            # Handle nilai terlalu kecil dengan refleksi
+            small_indices = data < 0.1  # Threshold untuk nilai sangat kecil
+            if np.any(small_indices):
+                # Generate nilai baru dari distribusi yang sama
+                new_values = weibull_min.rvs(c, loc, scale, size=np.sum(small_indices), random_state=rng)
+                # Pastikan nilai baru tidak terlalu kecil
+                new_values = np.where(new_values < 0.1, new_values + 0.1, new_values)
+                data[small_indices] = new_values
+                
+        else:  # Distribusi Normal untuk SO2, NO2, CO
             mu, std = dist_params
+            # 1. Generate data normal
             data = rng.normal(mu, std, n_samples)
+            
+            # 2. Handle nilai negatif dengan lebih elegan
+            neg_indices = data < 0
+            
+            if np.any(neg_indices):
+                # Hitung probabilitas kumulatif untuk nilai negatif
+                cdf_neg = norm.cdf(0, loc=mu, scale=std)
+                
+                # Generate nilai baru dari truncated normal (0 sampai infinity)
+                truncated_values = mu + std * rng.standard_normal(size=np.sum(neg_indices))
+                truncated_values = np.abs(truncated_values)  # Refleksi nilai
+                
+                # Gabungkan dengan data positif
+                data[neg_indices] = truncated_values
         
-        # Handle nilai negatif
-        data = np.where(data < 0, 0, data)
         df[col] = np.round(data, 2)
     
     return df
