@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import SubplotSpec 
 from sklearn.preprocessing import MinMaxScaler
-from scipy.stats import norm
+from scipy.stats import norm, weibull_min
 import seaborn as sns
 import warnings
 import os
@@ -75,55 +75,61 @@ def create_word_document(df, params, n_samples):
     doc.add_paragraph("Catatan: CO ditampilkan dalam µg/m³ (tanpa konversi)")
     
     # 2. Parameter Distribusi
-    doc.add_paragraph().add_run("\nParameter Distribusi Normal (Data Excel)").bold = True
-    
-    # Hitung parameter dari data asli
-    param_data = []
-    for col in ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']:
-        mu, std = norm.fit(df[col])
-        param_data.append([col, f"{mu:.2f}", f"{std:.2f}"])
+    doc.add_paragraph().add_run("\nParameter Distribusi").bold = True
     
     # Buat tabel parameter
-    param_table = doc.add_table(rows=len(param_data)+1, cols=3)
+    param_table = doc.add_table(rows=7, cols=4)
     param_table.style = 'Table Grid'
     
     # Header
     param_table.cell(0,0).text = "Polutan"
-    param_table.cell(0,1).text = "Mean (µg/m³)"
-    param_table.cell(0,2).text = "Std Dev (µg/m³)"
+    param_table.cell(0,1).text = "Distribusi"
+    param_table.cell(0,2).text = "Parameter 1"
+    param_table.cell(0,3).text = "Parameter 2"
     
     # Isi data
-    for i, row in enumerate(param_data, start=1):
-        param_table.cell(i,0).text = row[0]  # Polutan
-        param_table.cell(i,1).text = row[1]  # Mean
-        param_table.cell(i,2).text = row[2]  # Std Dev
+    for i, col in enumerate(['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3'], start=1):
+        dist_type, *dist_params = params[col]
+        param_table.cell(i,0).text = col
+        param_table.cell(i,1).text = dist_type
+        param_table.cell(i,2).text = f"{dist_params[0]:.2f}"
+        param_table.cell(i,3).text = f"{dist_params[1]:.2f}" if len(dist_params) > 1 else "-"
     
     doc.add_paragraph("Parameter ini digunakan sebagai dasar simulasi data")
     
     # Distribusi Parameter
     plt.figure(figsize=(15, 10))
-    plt.suptitle('Distribusi Parameter Kualitas Udara (Normal)', fontsize=14)
+    plt.suptitle('Distribusi Parameter Kualitas Udara', fontsize=14)
     for i, col in enumerate(['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3'], 1):
         if col in params:
-            dist_type, mu, std = params[col]
+            dist_type, *dist_params = params[col]
             plt.subplot(2, 3, i)
             sns.histplot(df[col], bins=20, kde=False, stat="density", alpha=0.6, label='Histogram')
+            
             x = np.linspace(0, df[col].max(), 100)
-            pdf = norm.pdf(x, mu, std)
-            plt.plot(x, pdf, 'g-', lw=2, label='Normal Fit')
-            plt.title(f'{col} (Normal)')
+            if dist_type == 'Normal':
+                mu, std = dist_params
+                pdf = norm.pdf(x, mu, std)
+                plt.plot(x, pdf, 'g-', lw=2, label='Normal Fit')
+            elif dist_type == 'Weibull':
+                c, loc, scale = dist_params
+                pdf = weibull_min.pdf(x, c, loc, scale)
+                plt.plot(x, pdf, 'r-', lw=2, label='Weibull Fit')
+                
+            plt.title(f'{col} ({dist_type})')
             plt.xlabel('Konsentrasi')
             plt.ylabel('Density')
             plt.legend()
     plt.tight_layout(rect=[0, 0, 1, 0.95])
-    save_to_word(doc, "Distribusi Parameter dengan Kurva Normal", 
-                content="""**Histogram menunjukkan distribusi konsentrasi polutan. Garis hijau menunjukkan kurva distribusi normal.**
+    save_to_word(doc, "Distribusi Parameter dengan Kurva Fit", 
+                content="""**Histogram menunjukkan distribusi konsentrasi polutan. Garis menunjukkan kurva distribusi yang difitkan.**
                            **Penjelasan:**
-                           - Grafik membandingkan distribusi aktual (histogram) dengan kurva normal teoritis
-                           - Garis hijau: Distribusi Normal yang difitkan ke data
-                           - Semua polutan sekarang dimodelkan dengan distribusi normal
-                           - PM2.5 dan PM10 cenderung memiliki skewness positif
-                           - SO2 dan CO memiliki distribusi yang lebih simetris
+                           - Grafik membandingkan distribusi aktual (histogram) dengan kurva teoritis
+                           - Garis hijau: Distribusi Normal
+                           - Garis merah: Distribusi Weibull
+                           - PM2.5, PM10, dan O3 dimodelkan dengan distribusi Weibull
+                           - SO2, NO2, dan CO dimodelkan dengan distribusi normal
+                           - Distribusi Weibull cocok untuk data dengan skewness positif
                 """,
                 image=True)
     
@@ -378,16 +384,14 @@ def create_word_document(df, params, n_samples):
     std_pollutants = st.session_state.df[['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']].std().sort_values()
     most_stable = std_pollutants.idxmin()
 
-
-
     kesimpulan = f"""
     1. Rata-rata nilai ISPU selama {st.session_state.n_samples} hari adalah {rata2_ispu:.2f}, menunjukkan bahwa kualitas udara cenderung berada pada kategori {'Baik/Sedang' if rata2_ispu < 100 else 'Tidak Sehat'}.
     2. Nilai ISPU tertinggi adalah {max_ispu:.2f}, masuk dalam kategori '{st.session_state.df.loc[st.session_state.df['ISPU_max'].idxmax(), 'Kategori_ISPU']}'. Ini merupakan kondisi kritis yang memerlukan antisipasi lebih lanjut.
     3. Terdapat {hari_tidak_sehat} hari dengan kategori ISPU tidak sehat/sangat tidak sehat/berbahaya. Kelompok rentan seperti lansia dan penderita penyakit paru-paru perlu waspada.
     4. Polutan dominan berdasarkan konsentrasi tertinggi adalah '{polusi_tertinggi}', menunjukkan perlunya fokus mitigasi pada parameter tersebut.
     5. Terdapat {hari_dengan_polusi_tinggi} hari dengan polusi total sangat tinggi (>75% kuartil), yang mungkin dipengaruhi oleh peningkatan beberapa polutan secara bersamaan.
-    6. PM2.5 melebihi batas aman WHO (15.5 µg/m³) sebanyak {pm25_over_limit} hari, menunjukkan perlunya pengendalian emisi kendaraan dan industri.
-    7. PM10 melebihi batas aman WHO (50 µg/m³) sebanyak {pm10_over_limit} hari, menunjukkan polusi udara yang cukup signifikan di wilayah simulasi.
+    6. PM2.5 melebihi batas aman ISPU (15.5 µg/m³) sebanyak {pm25_over_limit} hari, menunjukkan perlunya pengendalian emisi kendaraan dan industri.
+    7. PM10 melebihi batas aman ISPU (50 µg/m³) sebanyak {pm10_over_limit} hari, menunjukkan polusi udara yang cukup signifikan di wilayah simulasi.
     8. Ozon (O3) melebihi ambang batas aman sebanyak {o3_over_limit} hari, menunjukkan aktivitas fotokimia yang tinggi terutama di siang hari.
     9. CO melebihi ambang batas sebanyak {co_over_limit} hari, mengindikasikan adanya peningkatan emisi kendaraan bermotor.
     10. SO2 melebihi ambang batas sebanyak {so2_over_limit} hari, menunjukkan kontribusi aktivitas industri atau pembangkit listrik dalam memengaruhi kualitas udara.
@@ -431,7 +435,7 @@ if 'df_excel' not in st.session_state:
 if 'n_samples' not in st.session_state:
     st.session_state.n_samples = 365
 
-# ====== STEP 1: BACA FILE EXCEL DAN FIT PARAMETER NORMAL ======
+# ====== STEP 1: BACA FILE EXCEL DAN FIT PARAMETER DISTRIBUSI ======
 @st.cache_data
 def load_data():
     file_excel = "TugasBesar.xlsx"  # Update with your file path
@@ -451,10 +455,18 @@ def load_data():
 if st.session_state.df_excel is None:
     st.session_state.df_excel = load_data()
 
-# Estimasi parameter distribusi normal untuk semua polutan
+# Estimasi parameter distribusi untuk semua polutan
 if st.session_state.params is None:
     st.session_state.params = {}
-    for col in st.session_state.df_excel.columns:
+    
+    # Fit Weibull untuk PM2.5, PM10, dan O3
+    for col in ['PM2.5', 'PM10', 'O3']:
+        data = st.session_state.df_excel[col]
+        params = weibull_min.fit(data, floc=0)  # Force location parameter to 0
+        st.session_state.params[col] = ('Weibull', *params)
+    
+    # Fit Normal untuk SO2, NO2, dan CO
+    for col in ['SO2', 'NO2', 'CO']:
         mu, std = norm.fit(st.session_state.df_excel[col])
         st.session_state.params[col] = ('Normal', mu, std)
 
@@ -464,30 +476,22 @@ def generate_simulation(n_samples=365):
     df = pd.DataFrame()
     
     for col in st.session_state.df_excel.columns:
-        dist_type, mu, std = st.session_state.params[col]
+        dist_type, *dist_params = st.session_state.params[col]
         
-        # 1. Generate data normal
-        data = rng.normal(mu, std, n_samples)
+        if dist_type == 'Weibull':
+            # Generate data Weibull untuk PM2.5, PM10, dan O3
+            c, loc, scale = dist_params
+            data = weibull_min.rvs(c, loc, scale, size=n_samples, random_state=rng)
+        else:
+            # Generate data Normal untuk SO2, NO2, dan CO
+            mu, std = dist_params
+            data = rng.normal(mu, std, n_samples)
         
-        # 2. Handle nilai negatif dengan lebih elegan
-        neg_indices = data < 0
-        
-        if np.any(neg_indices):
-            # Hitung probabilitas kumulatif untuk nilai negatif
-            cdf_neg = norm.cdf(0, loc=mu, scale=std)
-            
-            # Generate nilai baru dari truncated normal (0 sampai infinity)
-            truncated_values = mu + std * rng.standard_normal(size=np.sum(neg_indices))
-            truncated_values = np.abs(truncated_values)  # Refleksi nilai
-            
-            # Gabungkan dengan data positif
-            data[neg_indices] = truncated_values
-        
+        # Handle nilai negatif
+        data = np.where(data < 0, 0, data)
         df[col] = np.round(data, 2)
     
     return df
-
-
 
 # User input for number of samples
 st.session_state.n_samples = st.sidebar.number_input("Jumlah Sampel Hari", min_value=30, max_value=1000, value=365)
@@ -551,18 +555,17 @@ def calculate_ispu_no2(no2):
     else:
         return 300 + (no2 - 2000) * 100 / (3000 - 2000)
 
-
-def calculate_ispu_co(co):
-    if co <= 4.0:
-        return co * 50 / 4.0
-    elif co <= 8.0:
-        return 50 + (co - 4.0) * 50 / (8.0 - 4.0)
-    elif co <= 15.0:
-        return 100 + (co - 8.0) * 100 / (15.0 - 8.0)
-    elif co <= 17.0:
-        return 200 + (co - 15.0) * 100 / (17.0 - 15.0)
+def calculate_ispu_co(co_ugm3):  # input dalam µg/m³
+    if co_ugm3 <= 4000:
+        return co_ugm3 * 50 / 4000
+    elif co_ugm3 <= 8000:
+        return 50 + (co_ugm3 - 4000) * 50 / (8000 - 4000)
+    elif co_ugm3 <= 15000:
+        return 100 + (co_ugm3 - 8000) * 100 / (15000 - 8000)
+    elif co_ugm3 <= 17000:
+        return 200 + (co_ugm3 - 15000) * 100 / (17000 - 15000)
     else:
-        return 300 + (co - 17.0) * 100 / (30.0 - 17.0)
+        return 300 + (co_ugm3 - 17000) * 100 / (30000 - 17000)
 
 def calculate_ispu_o3(o3):
     if o3 <= 120:
@@ -575,7 +578,6 @@ def calculate_ispu_o3(o3):
         return 200 + (o3 - 400) * 100 / (800 - 400)
     else:
         return 300 + (o3 - 800) * 100 / (1000 - 800)
-
 
 # Hitung semua ISPU
 if 'ISPU_PM2_5' not in st.session_state.df.columns:
@@ -615,60 +617,58 @@ with tab1:
     st.dataframe(summary_stats)
     
     # 2. Parameter Distribusi (dari data Simulasi)
-    st.markdown("**Parameter Distribusi Normal (Dihitung dari Data Simulasi):**")
+    st.markdown("**Parameter Distribusi (Dihitung dari Data Simulasi):**")
     
-    # Hitung parameter dari data Simulasi
-    original_params = []
+    # Buat tabel parameter
+    param_table = pd.DataFrame(columns=['Polutan', 'Distribusi', 'Parameter 1', 'Parameter 2'])
+    
     for col in ['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']:
-        mu, std = norm.fit(st.session_state.df[col])
-        original_params.append({
-            'Polutan': col,
-            'Mean (µg/m³)': mu,
-            'Std Dev (µg/m³)': std
-        })
+        dist_type, *dist_params = st.session_state.params[col]
+        if dist_type == 'Weibull':
+            param_table.loc[len(param_table)] = [col, 'Weibull', f'Shape: {dist_params[0]:.2f}', f'Scale: {dist_params[2]:.2f}']
+        else:
+            param_table.loc[len(param_table)] = [col, 'Normal', f'Mean: {dist_params[0]:.2f}', f'Std: {dist_params[1]:.2f}']
     
-    params_df = pd.DataFrame(original_params)
-    st.dataframe(params_df.round(2))
-    
-    st.markdown("""
-    **Keterangan:**
-    - **Mean**: Rata-rata konsentrasi polutan dalam data asli
-    - **Std Dev**: Standar deviasi konsentrasi polutan
-    - Parameter ini digunakan untuk membangkitkan data simulasi
-    """)
-
+    st.dataframe(param_table)
 
     # Plot distribusi parameter
-    st.subheader("Distribusi Parameter dengan Kurva Normal")
+    st.subheader("Distribusi Parameter dengan Kurva Fit")
     fig1, axes1 = plt.subplots(2, 3, figsize=(15, 10))
-    fig1.suptitle('Distribusi Parameter Kualitas Udara (Normal)', fontsize=14)
+    fig1.suptitle('Distribusi Parameter Kualitas Udara', fontsize=14)
     axes1 = axes1.ravel()
 
     st.markdown("""
     **Penjelasan:**
-    - Grafik membandingkan distribusi aktual (histogram) dengan kurva normal teoritis
-    - Garis hijau: Distribusi Normal yang difitkan ke data
-    - Semua polutan sekarang dimodelkan dengan distribusi normal
-    - PM2.5 dan PM10 cenderung memiliki skewness positif
-    - SO2 dan CO memiliki distribusi yang lebih simetris
+    - Grafik membandingkan distribusi aktual (histogram) dengan kurva teoritis
+    - Garis hijau: Distribusi Normal
+    - Garis merah: Distribusi Weibull
+    - PM2.5, PM10, dan O3 dimodelkan dengan distribusi Weibull
+    - SO2, NO2, dan CO dimodelkan dengan distribusi normal
     """)
     
     for i, col in enumerate(['PM2.5', 'PM10', 'SO2', 'NO2', 'CO', 'O3']):
-        if col in st.session_state.params:
-            dist_type, mu, std = st.session_state.params[col]
-            ax = axes1[i]
-            sns.histplot(st.session_state.df[col], bins=20, kde=False, stat="density", alpha=0.6, label='Histogram', ax=ax)
-            x = np.linspace(0, st.session_state.df[col].max(), 100)
+        dist_type, *dist_params = st.session_state.params[col]
+        ax = axes1[i]
+        sns.histplot(st.session_state.df[col], bins=20, kde=False, stat="density", alpha=0.6, label='Histogram', ax=ax)
+        
+        x = np.linspace(0, st.session_state.df[col].max(), 100)
+        if dist_type == 'Weibull':
+            c, loc, scale = dist_params
+            pdf = weibull_min.pdf(x, c, loc, scale)
+            ax.plot(x, pdf, 'r-', lw=2, label='Weibull Fit')
+        else:
+            mu, std = dist_params
             pdf = norm.pdf(x, mu, std)
             ax.plot(x, pdf, 'g-', lw=2, label='Normal Fit')
-            ax.set_title(f'{col} (Normal)')
-            ax.set_xlabel('Konsentrasi')
-            ax.set_ylabel('Density')
-            ax.legend()
+            
+        ax.set_title(f'{col} ({dist_type})')
+        ax.set_xlabel('Konsentrasi')
+        ax.set_ylabel('Density')
+        ax.legend()
     
     plt.tight_layout()
     st.pyplot(fig1)
-    st.caption("Histogram menunjukkan distribusi konsentrasi polutan. Garis hijau menunjukkan kurva distribusi normal.")
+    st.caption("Histogram menunjukkan distribusi konsentrasi polutan dengan kurva distribusi yang sesuai.")
     plt.close()
 
 with tab2:
@@ -944,8 +944,8 @@ with tab3:
     3. Terdapat {hari_tidak_sehat} hari dengan kategori ISPU tidak sehat/sangat tidak sehat/berbahaya. Kelompok rentan seperti lansia dan penderita penyakit paru-paru perlu waspada.
     4. Polutan dominan berdasarkan konsentrasi tertinggi adalah '{polusi_tertinggi}', menunjukkan perlunya fokus mitigasi pada parameter tersebut.
     5. Terdapat {hari_dengan_polusi_tinggi} hari dengan polusi total sangat tinggi (>75% kuartil), yang mungkin dipengaruhi oleh peningkatan beberapa polutan secara bersamaan.
-    6. PM2.5 melebihi batas aman WHO (15.5 µg/m³) sebanyak {pm25_over_limit} hari, menunjukkan perlunya pengendalian emisi kendaraan dan industri.
-    7. PM10 melebihi batas aman WHO (50 µg/m³) sebanyak {pm10_over_limit} hari, menunjukkan polusi udara yang cukup signifikan di wilayah simulasi.
+    6. PM2.5 melebihi batas aman ISPU (15.5 µg/m³) sebanyak {pm25_over_limit} hari, menunjukkan perlunya pengendalian emisi kendaraan dan industri.
+    7. PM10 melebihi batas aman ISPU (50 µg/m³) sebanyak {pm10_over_limit} hari, menunjukkan polusi udara yang cukup signifikan di wilayah simulasi.
     8. Ozon (O3) melebihi ambang batas aman sebanyak {o3_over_limit} hari, menunjukkan aktivitas fotokimia yang tinggi terutama di siang hari.
     9. CO melebihi ambang batas sebanyak {co_over_limit} hari, mengindikasikan adanya peningkatan emisi kendaraan bermotor.
     10. SO2 melebihi ambang batas sebanyak {so2_over_limit} hari, menunjukkan kontribusi aktivitas industri atau pembangkit listrik dalam memengaruhi kualitas udara.
