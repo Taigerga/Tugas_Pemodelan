@@ -1016,7 +1016,7 @@ with tab3:
     10. SO2 melebihi ambang batas sebanyak {so2_over_limit} hari, menunjukkan kontribusi aktivitas industri atau pembangkit listrik dalam memengaruhi kualitas udara.
     11. NO2 melebihi ambang batas sebanyak {no2_over_limit} hari, mengindikasikan adanya peningkatan aktivitas kendaraan bermotor dan pembakaran bahan bakar fosil.
     12. Polutan {max_pollutant} memiliki konsentrasi tertinggi di seluruh simulasi, menunjukkan bahwa polutan tersebut paling berkontribusi terhadap penurunan kualitas udara.
-    13. Polutan {min_pollutant} memiliki konsentrasi tertinggi di minimim.
+    13. Polutan {min_pollutant} memiliki konsentrasi tertinggi di minimum.
     14. {least_harmful} merupakan polutan dengan konsentrasi rata-rata terendah (**{mean_pollutants[least_harmful]:.2f} µg/m³**). Sumber emisi {least_harmful} relatif lebih terkendali.  
     15. {cleanest_pollutant} mencapai level terendah (**{min_pollutants[cleanest_pollutant]:.2f} µg/m³**) saat udara paling bersih.
     16. {most_stable} memiliki fluktuasi harian paling stabil (deviasi **{std_pollutants[most_stable]:.2f} µg/m³**).  
